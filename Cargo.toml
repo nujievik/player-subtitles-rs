@@ -1,0 +1,11 @@
+[package]
+name = "player-subtitles"
+version = "0.1.0"
+description = "A subtitle library focused on player-compatible subtitle files."
+authors = ["Ivan Reutov <nujievik@gmail.com>"]
+edition = "2024"
+rust-version = "1.85"
+repository = "https://github.com/nujievik/player-subtitles-rs"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
