@@ -1,70 +1,54 @@
-#[path = "srt/block.rs"]
-mod block;
 mod common;
-#[path = "srt/line.rs"]
-mod line;
-#[path = "srt/new.rs"]
-mod new;
-#[path = "srt/standardize.rs"]
-mod standardize;
 #[path = "srt/write.rs"]
 mod write;
 
 use common::*;
 use player_subtitles::*;
 
-fn new_standard() -> SrtSubtitles<'static> {
-    let st = Time::new_unchecked(0, 0, 0, 0);
-    let end = Time::new_unchecked(0, 0, 5, 0);
-    let lines = vec![
-        line::new_with_ty("1\n", SrtLineType::Number),
-        line::new_with_ty(
-            "00:00:00,000 --> 00:00:05,000\n",
-            SrtLineType::TimeRange((st, end)),
-        ),
-        line::new_with_ty("x\n", SrtLineType::Text),
-        line::new_with_ty("\n", SrtLineType::Blank),
-    ];
-    SrtSubtitles(lines)
-}
-
-#[test]
-fn is_standard() {
-    let mut srt = new_standard();
-    assert!(srt.is_standard());
-    for _ in 0..4 {
-        srt.pop();
-        assert!(!srt.is_standard());
-    }
-}
-
-#[test]
-fn blocks() {
-    let mut srt = new_standard();
-    for _ in 0..4 {
-        {
-            let mut blocks = srt.blocks();
-            assert_eq!(Some(SrtBlock(&srt[..])), blocks.next());
-            assert_eq!(None, blocks.next());
+macro_rules! test_iter_file {
+    ($fn:ident, $file:expr, $lines:expr) => {
+        #[test]
+        fn $fn() {
+            let mut lines = SrtLines::open_file(data($file)).unwrap();
+            for s in $lines {
+                let l = SrtLine::new(s.as_bytes());
+                assert_eq!(lines.next().unwrap(), l);
+            }
+            assert!(lines.next().is_none());
         }
-        srt.pop();
-    }
+    };
 }
 
+test_iter_file!(iter_txt_file, "four_lines.txt", ["0", "1", "2", "3"]);
+test_iter_file!(
+    iter_srt_file,
+    "srt.srt",
+    [
+        "1",
+        "00:00:00,000 --> 00:00:05,000",
+        "It's simple srt subtitles"
+    ]
+);
+test_iter_file!(
+    iter_bomed_srt_file,
+    "bomed.srt",
+    [
+        "1",
+        "00:00:00,000 --> 00:00:05,000",
+        "It's simple srt subtitles"
+    ]
+);
+
 #[test]
-fn multiple_blocks() {
-    let lines = vec![
-        SrtLine::new("a"),
-        SrtLine::new(""),
-        SrtLine::new("b"),
-        SrtLine::new("c"),
-        SrtLine::new(""),
-        SrtLine::new("de"),
-    ];
-    let srt = SrtSubtitles(lines);
-    let mut blocks = srt.blocks();
-    assert_eq!(Some(SrtBlock(&srt[0..2])), blocks.next());
-    assert_eq!(Some(SrtBlock(&srt[2..5])), blocks.next());
-    assert_eq!(Some(SrtBlock(&srt[5..6])), blocks.next());
-    assert_eq!(None, blocks.next());
+fn iter_cp1251_srt_file() {
+    let mut lines = SrtLines::open_file(data("cp1251.srt")).unwrap();
+    for s in ["1", "00:00:00,000 --> 00:00:05,000"] {
+        let l = SrtLine::new(s.as_bytes());
+        assert_eq!(lines.next().unwrap(), l);
+    }
+    let l = SrtLine::new(&[
+        99, 112, 49, 50, 53, 49, 32, 241, 243, 225, 242, 232, 242, 240, 251,
+    ]);
+    assert_eq!(lines.next().unwrap(), l);
+    assert!(lines.next().is_none());
 }

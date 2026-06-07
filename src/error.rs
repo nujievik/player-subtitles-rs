@@ -4,7 +4,6 @@ use std::{error, fmt, io};
 #[non_exhaustive]
 pub enum Error {
     Io(io::Error),
-    NonStandardBlock((usize, &'static str)),
     ValueValidation(&'static str),
 }
 
@@ -12,11 +11,6 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Io(e) => write!(f, "I/O error: {}", e),
-            Self::NonStandardBlock((i, e)) => write!(
-                f,
-                "a block that starts at line {} is non-standard: {}",
-                i, e
-            ),
             Self::ValueValidation(e) => write!(f, "value validation: {}", e),
         }
     }

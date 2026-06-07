@@ -1,68 +1,157 @@
 use super::*;
-use std::sync::LazyLock;
-
-static SRT: LazyLock<SrtSubtitles<'static>> =
-    LazyLock::new(|| SrtSubtitles::read(&data("srt.srt")).unwrap());
+use std::fs;
 
 #[test]
 fn write() {
-    let opath = temp("srt_write.srt");
-    SRT.write(&opath).unwrap();
-    let osrt = SrtSubtitles::read(&opath).unwrap();
-    assert_eq!(&SRT[..3], &osrt[..3]);
-    assert_eq!(SRT[3].ty, osrt[3].ty);
-}
-
-#[test]
-fn write_with_bom() {
-    let opath = temp("srt_write_with_bom.srt");
-    let mut opts = WriteOptions::default();
-    opts.bom = true;
-    SRT.write_with(&opath, &opts).unwrap();
-    let osrt = SrtSubtitles::read(&opath).unwrap();
-
-    assert_eq!(
-        line::new_with_ty("\u{feff}1\n", SrtLineType::Number),
-        osrt[0]
-    );
-    assert_eq!(&SRT[1..3], &osrt[1..3]);
-    assert_eq!(SRT[3].ty, osrt[3].ty);
-}
-
-#[test]
-fn write_with_add_time() {
-    let opath = temp("srt_write_with_add_time.srt");
-    let mut opts = WriteOptions::default();
-    let add = Time::new_unchecked(0, 1, 0, 0);
-    opts.add_time = Some(add);
-    SRT.write_with(&opath, &opts).unwrap();
-
-    let osrt = SrtSubtitles::read(&opath).unwrap();
-    assert_eq!(&SRT[0], &osrt[0]);
-    assert_eq!(SrtLine::new("00:01:00,000 --> 00:01:05,000\n"), osrt[1]);
-    assert_eq!(&SRT[2], &osrt[2]);
-    assert_eq!(SRT[3].ty, osrt[3].ty);
-}
-
-#[test]
-fn read_and_write_with_default() {
     let ipath = data("srt.srt");
-    let opath = temp("srt_read_and_write_with_default.srt");
-    let opts = WriteOptions::default();
-    SrtSubtitles::read_and_write_with(&ipath, &opath, &opts).unwrap();
+    let opath = temp("srt_write.srt");
+    let _ = fs::remove_file(&opath);
 
-    let osrt = SrtSubtitles::read(&opath).unwrap();
-    assert_eq!(&SRT[..3], &osrt[..3]);
-    assert_eq!(SRT[3].ty, osrt[3].ty);
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write(&opath).unwrap();
+
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    while let Some(iline) = ilines.next() {
+        assert_eq!(iline, olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
 }
 
 #[test]
-fn raw_write() {
-    let opath = temp("srt_raw_write.srt");
+fn without_number() {
+    let ipath = data("without_number.srt");
+    let opath = temp("srt_write_without_number.srt");
+    let _ = fs::remove_file(&opath);
 
-    ["srt.srt", "cp1251.srt", "bomed.srt"].iter().for_each(|f| {
-        let isrt = SrtSubtitles::read(&data(f)).unwrap();
-        isrt.raw_write(&opath).unwrap();
-        assert_eq!(isrt, SrtSubtitles::read(&opath).unwrap());
-    })
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write(&opath).unwrap();
+
+    let mut ilines = SrtLines::open_file(&data("srt.srt")).unwrap();
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    while let Some(iline) = ilines.next() {
+        assert_eq!(iline, olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
+}
+
+#[test]
+fn txt() {
+    let ipath = data("four_lines.txt");
+    let opath = temp("srt_write_txt.srt");
+    let _ = fs::remove_file(&opath);
+
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write(&opath).unwrap();
+    let mut olines = ByteLines::open_file(&opath).unwrap();
+    assert!(olines.next().is_none());
+}
+
+#[test]
+fn with_bom() {
+    let ipath = data("srt.srt");
+    let opath = temp("srt_write_with_bom.srt");
+    let _ = fs::remove_file(&opath);
+
+    let mut opts = WriteOptions::new();
+    opts.bom = true;
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write_with(&opath, &opts).unwrap();
+
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    while let Some(iline) = ilines.next() {
+        assert_eq!(iline, olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
+
+    let mut ilines = ByteLines::open_file(&ipath).unwrap();
+    let mut olines = ByteLines::open_file(&opath).unwrap();
+    let mut exp = Vec::from("\u{feff}".as_bytes());
+    exp.extend_from_slice(ilines.next().unwrap());
+    assert_eq!(exp, olines.next().unwrap());
+}
+
+#[test]
+fn with_add_time() {
+    let ipath = data("srt.srt");
+    let opath = temp("srt_write_with_add_time.srt");
+    let _ = fs::remove_file(&opath);
+
+    let mut opts = WriteOptions::default();
+    opts.add_time = Some(Time::new_unchecked(0, 1, 0, 0));
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write_with(&opath, &opts).unwrap();
+
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    for s in [
+        "1",
+        "00:01:00,000 --> 00:01:05,000",
+        "It's simple srt subtitles",
+    ] {
+        assert_eq!(SrtLine::new(s), olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
+}
+
+#[test]
+fn with_sub_time() {
+    let ipath = data("two_blocks.srt");
+    let opath = temp("srt_write_with_sub_time.srt");
+    let _ = fs::remove_file(&opath);
+
+    let mut opts = WriteOptions::default();
+    opts.sub_time = Some(Time::new_unchecked(0, 0, 5, 0));
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write_with(&opath, &opts).unwrap();
+
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    for s in [
+        "1",
+        "00:00:05,000 --> 00:00:10,000",
+        "10-15",
+        "",
+        "2",
+        "00:00:10,000 --> 00:00:15,000",
+        "15-20",
+    ] {
+        assert_eq!(SrtLine::new(s), olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
+}
+
+#[test]
+fn with_start_from() {
+    let ipath = data("two_blocks.srt");
+    let opath = temp("srt_write_with_start_from.srt");
+    let _ = fs::remove_file(&opath);
+
+    let mut opts = WriteOptions::default();
+    opts.start_from = Some(Time::new_unchecked(0, 0, 15, 0));
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write_with(&opath, &opts).unwrap();
+
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    for s in ["1", "00:00:15,000 --> 00:00:20,000", "15-20"] {
+        assert_eq!(SrtLine::new(s), olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
+}
+
+#[test]
+fn with_end_on() {
+    let ipath = data("two_blocks.srt");
+    let opath = temp("srt_write_with_end_on.srt");
+    let _ = fs::remove_file(&opath);
+
+    let mut opts = WriteOptions::default();
+    opts.end_on = Some(Time::new_unchecked(0, 0, 15, 0));
+    let mut ilines = SrtLines::open_file(&ipath).unwrap();
+    ilines.write_with(&opath, &opts).unwrap();
+
+    let mut olines = SrtLines::open_file(&opath).unwrap();
+    for s in ["1", "00:00:10,000 --> 00:00:15,000", "10-15"] {
+        assert_eq!(SrtLine::new(s), olines.next().unwrap());
+    }
+    assert!(olines.next().is_none());
 }

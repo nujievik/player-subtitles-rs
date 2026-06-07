@@ -1,29 +1,25 @@
+pub mod srt;
+
+mod byte_helpers;
+mod byte_lines;
 mod error;
 mod options;
-pub mod srt;
 mod time;
 
+pub use byte_lines::ByteLines;
 pub use error::Error;
 pub use options::WriteOptions;
-pub use srt::{SrtBlock, SrtLine, SrtLineType, SrtSubtitles};
+pub use srt::{SrtLine, SrtLines};
 pub use time::Time;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-const BOM: &[u8] = "\u{feff}".as_bytes();
+pub trait StreamingIterator {
+    type Item<'a>
+    where
+        Self: 'a;
 
-// Returns a byte slice with leading and trailing whitespace removed.
-fn trim(data: &[u8]) -> &[u8] {
-    let mut start = 0;
-    let mut end = data.len();
-
-    while start < end && data[start].is_ascii_whitespace() {
-        start += 1;
-    }
-
-    while end > start && data[end - 1].is_ascii_whitespace() {
-        end -= 1;
-    }
-
-    &data[start..end]
+    fn next<'a>(&'a mut self) -> Option<Self::Item<'a>>;
 }
+
+const BOM: &[u8] = "\u{feff}".as_bytes();

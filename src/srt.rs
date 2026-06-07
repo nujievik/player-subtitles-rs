@@ -1,91 +1,77 @@
 //! A SubRip subtitles module.
 
-macro_rules! deref_singleton_lifetime_struct {
-    ($wrapper:ty, $inner:ty) => {
-        impl<'a> std::ops::Deref for $wrapper {
-            type Target = $inner;
-
-            fn deref(&self) -> &Self::Target {
-                &self.0
-            }
-        }
-
-        impl<'a> std::ops::DerefMut for $wrapper {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                &mut self.0
-            }
-        }
-    };
-}
-
-mod block;
-mod line;
-mod new;
-mod standardize;
+pub mod line;
 mod write;
 
-pub use block::SrtBlock;
-pub use line::{SrtLine, SrtLineType};
+use crate::{ByteLines, Result, StreamingIterator, byte_helpers};
+pub use line::SrtLine;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Empty},
+    path::Path,
+};
 
-use std::{iter, ops::Range};
+pub struct SrtLines<'a, T: BufRead> {
+    blines: ByteLines<'a, T>,
+    is_first_taken: bool,
+}
 
-/// A SubRip subtitles in line-by-line representation.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SrtSubtitles<'a>(pub Vec<SrtLine<'a>>);
-deref_singleton_lifetime_struct!(SrtSubtitles<'a>, Vec<SrtLine<'a>>);
+impl<T: BufRead> StreamingIterator for SrtLines<'_, T> {
+    type Item<'a>
+        = SrtLine<'a>
+    where
+        Self: 'a;
 
-impl SrtSubtitles<'_> {
-    /// Returns `true` if self is non-empty and all its blocks is standard.
-    pub fn is_standard(&self) -> bool {
-        !self.is_empty() && self.blocks().all(|b| b.is_standard())
-    }
-
-    /// Returns an iterator over all subtitle blocks.
-    ///
-    /// Subtitle block is a slice of lines: &[a non-blank line..a non blank line after a blank line].
-    /// Last block is a slice: &[a non-blank line..=last line].
-    pub fn blocks(&self) -> impl Iterator<Item = SrtBlock<'_>> {
-        self.blocks_ranges().map(|rng| SrtBlock(&self[rng]))
-    }
-
-    fn blocks_ranges(&self) -> impl Iterator<Item = Range<usize>> {
-        let mut was_blank = false;
-        let mut start = 0;
-        let mut end = 0;
-        let len = self.len();
-        iter::from_fn(move || {
-            while end < len {
-                let is_blank = self[end].ty.is_blank();
-                if !is_blank && was_blank {
-                    break;
-                }
-                was_blank = is_blank;
-                end += 1;
-            }
-            if end == start {
-                None
+    fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
+        self.blines.next().map(|l| {
+            if self.is_first_taken {
+                SrtLine::new(l)
             } else {
-                let st = start;
-                start = end;
-                was_blank = false;
-                Some(st..end)
+                self.is_first_taken = true;
+                SrtLine::new(byte_helpers::trim_bom(l))
             }
         })
     }
 }
 
-fn set_newline_position(pos: &mut usize, data: &[u8], len: usize) {
-    while *pos < len {
-        match data[*pos] {
-            b'\r' if data.get(*pos + 1) == Some(&b'\n') => {
-                *pos += 2;
-                break;
-            }
-            b'\r' | b'\n' => {
-                *pos += 1;
-                break;
-            }
-            _ => *pos += 1,
+impl<'a, T: BufRead> From<ByteLines<'a, T>> for SrtLines<'a, T> {
+    fn from(blines: ByteLines<'a, T>) -> SrtLines<'a, T> {
+        SrtLines {
+            blines,
+            is_first_taken: false,
         }
     }
+}
+
+impl<'a> SrtLines<'a, Empty> {
+    pub fn from_bytes<B>(bytes: &'a B) -> Self
+    where
+        B: AsRef<[u8]> + ?Sized,
+    {
+        ByteLines::from_bytes(bytes).into()
+    }
+
+    pub fn from_str<S>(s: &'a S) -> Self
+    where
+        S: AsRef<str> + ?Sized,
+    {
+        Self::from_bytes(s.as_ref())
+    }
+}
+
+impl<'a, T: BufRead> SrtLines<'a, T> {
+    pub fn from_reader(reader: T) -> Self {
+        ByteLines::from_reader(reader).into()
+    }
+}
+
+impl<'a> SrtLines<'a, BufReader<File>> {
+    pub fn open_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let f = File::open(path)?;
+        Ok(SrtLines::from_reader(BufReader::new(f)))
+    }
+}
+
+pub fn open_file<'a, P: AsRef<Path>>(path: P) -> Result<SrtLines<'a, BufReader<File>>> {
+    SrtLines::open_file(path)
 }
