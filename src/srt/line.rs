@@ -15,9 +15,9 @@ pub struct BytesNumber<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct BytesTimeRange<'a> {
-    bytes: &'a [u8],
-    start: Time,
-    end: Time,
+    pub(crate) bytes: &'a [u8],
+    pub start: Time,
+    pub end: Time,
 }
 
 #[derive(Debug, PartialEq)]
@@ -146,42 +146,18 @@ fn get_time_range(data: &[u8]) -> Option<(Time, Time)> {
 fn get_time(data: &[u8]) -> Option<Time> {
     let mut it = data.split(|&b| b == b':');
 
-    let hours = get_u16(it.next()?)?;
-    let mins = get_u8(it.next()?)?;
+    let hours = byte_helpers::get_u16(it.next()?)?;
+    let mins = byte_helpers::get_u8(it.next()?)?;
 
     let sec_ms = it.next()?;
     let separator = sec_ms.iter().position(|&b| matches!(b, b',' | b'.'))?;
     let (secs_b, millis_b) = sec_ms.split_at(separator);
 
-    let secs = get_u8(secs_b)?;
-    let millis = get_u16(&millis_b[1..millis_b.len().min(4)])?;
+    let secs = byte_helpers::get_u8(secs_b)?;
+    let millis = byte_helpers::get_u16(&millis_b[1..millis_b.len().min(4)])?;
 
     Time::new(hours, mins, secs, millis).ok()
 }
-
-macro_rules! get_an_u_number {
-    ($fn:ident, $u:ident, $buf_u:ident) => {
-        fn $fn(data: &[u8]) -> Option<$u> {
-            if data.is_empty() {
-                return None;
-            }
-            let mut v: $buf_u = 0;
-            for &b in data {
-                if !b.is_ascii_digit() {
-                    return None;
-                }
-                v = v * 10 + (b - b'0') as $buf_u;
-                if v > $u::MAX as $buf_u {
-                    return None;
-                }
-            }
-            Some(v as $u)
-        }
-    };
-}
-
-get_an_u_number!(get_u8, u8, u16);
-get_an_u_number!(get_u16, u16, u32);
 
 #[cfg(test)]
 mod tests {

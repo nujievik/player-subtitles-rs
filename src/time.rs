@@ -66,6 +66,16 @@ impl Time {
             self.millis % 1000
         )
     }
+
+    pub(crate) fn to_vtt(self) -> String {
+        format!(
+            "{:02}:{:02}:{:02}.{:03}",
+            self.hours,
+            self.mins,
+            self.secs,
+            self.millis % 1000
+        )
+    }
 }
 
 impl From<Duration> for Time {
