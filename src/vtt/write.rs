@@ -23,6 +23,7 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
             (Vec::new(), Vec::new())
         };
         let mut is_wrote_blank = true;
+        let mut is_wrote_cue_time = false;
 
         while let Some(line) = self.next() {
             let bytes: &[u8] = match &line {
@@ -30,7 +31,9 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
                 VttLine::Blank => {
                     if !is_wrote_blank {
                         writer.write(b"\n")?;
+                        cue_id_buf.clear();
                         is_wrote_blank = true;
+                        is_wrote_cue_time = false;
                     }
                     continue;
                 }
@@ -60,13 +63,17 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
 
                     if !cue_id_buf.is_empty() {
                         writer.write(&cue_id_buf)?;
+                        writer.write(b"\n")?;
                         cue_id_buf.clear();
                     }
 
                     time_buf.clear();
                     write!(&mut time_buf, "{} --> {}", start.to_vtt(), end.to_vtt())?;
+                    is_wrote_cue_time = true;
                     time_buf.as_slice()
                 }
+                VttLine::Text(_) if is_setted_time && !is_wrote_cue_time => continue,
+                VttLine::Metadata(_) if is_setted_time && !is_wrote_cue_time => continue,
                 line => line.as_bytes(),
             };
             writer.write(bytes)?;
