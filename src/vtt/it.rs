@@ -2,7 +2,7 @@ use super::{
     VttLine, VttLines, VttSourceLines,
     line::{Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark},
 };
-use crate::{ByteLines, SrtLine, SrtLines, StreamingIterator, byte_helpers};
+use crate::{AssLines, ByteLines, SrtLine, SrtLines, StreamingIterator, byte_helpers};
 use std::io::BufRead;
 
 impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
@@ -16,6 +16,7 @@ impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
             VttSourceLines::Regular(xs) => {
                 next_regular(xs, &mut self.body_state, &mut self.current_state)
             }
+            VttSourceLines::Ass(_) => todo!(),
             VttSourceLines::Srt(xs) => next_srt(xs),
         }
     }
@@ -118,6 +119,10 @@ fn next_regular<'a, T: BufRead>(
     }
 
     Some(VttLine::Unrecognized(bytes))
+}
+
+fn next_ass<'a, T: BufRead>(lines: &'a AssLines<'_, T>) -> Option<VttLine<'a>> {
+    todo!();
 }
 
 fn next_srt<'a, T: BufRead>(srt_lines: &'a mut SrtLines<'_, T>) -> Option<VttLine<'a>> {

@@ -68,7 +68,7 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
                     }
 
                     time_buf.clear();
-                    write!(&mut time_buf, "{} --> {}", start.to_vtt(), end.to_vtt())?;
+                    write!(&mut time_buf, "{} --> {}", start.into_vtt(), end.into_vtt())?;
                     is_wrote_cue_time = true;
                     time_buf.as_slice()
                 }

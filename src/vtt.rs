@@ -7,7 +7,7 @@ mod write;
 
 pub use line::VttLine;
 
-use crate::{ByteLines, NewLines, Result, SrtLines};
+use crate::{AssLines, ByteLines, NewLines, Result, SrtLines};
 use it::{BodyState, CurrentState};
 use std::{
     fs::File,
@@ -33,5 +33,6 @@ pub fn open_file<'a, P: AsRef<Path>>(path: P) -> Result<VttLines<'a, BufReader<F
 
 pub(crate) enum VttSourceLines<'a, T: BufRead> {
     Regular(ByteLines<'a, T>),
+    Ass(AssLines<'a, T>),
     Srt(SrtLines<'a, T>),
 }

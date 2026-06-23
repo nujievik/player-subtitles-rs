@@ -7,7 +7,7 @@ mod write;
 
 pub use line::{BytesText, BytesTimeRange, SrtLine};
 
-use crate::{ByteLines, NewLines, Result, VttLines};
+use crate::{AssLines, ByteLines, NewLines, Result, VttLines};
 use it::IterState;
 use std::{
     fs::File,
@@ -27,5 +27,6 @@ pub fn open_file<'a, P: AsRef<Path>>(path: P) -> Result<SrtLines<'a, BufReader<F
 
 pub(crate) enum SrtSourceLines<'a, T: BufRead> {
     Regular(ByteLines<'a, T>),
+    Ass(AssLines<'a, T>),
     Vtt(VttLines<'a, T>),
 }

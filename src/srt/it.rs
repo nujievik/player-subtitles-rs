@@ -2,7 +2,7 @@ use super::{
     SrtLine, SrtLines, SrtSourceLines,
     line::{BytesText, BytesTimeRange},
 };
-use crate::{ByteLines, StreamingIterator, VttLine, VttLines, byte_helpers};
+use crate::{AssLines, ByteLines, StreamingIterator, VttLine, VttLines, byte_helpers};
 use std::io::BufRead;
 
 impl<T: BufRead> StreamingIterator for SrtLines<'_, T> {
@@ -14,6 +14,7 @@ impl<T: BufRead> StreamingIterator for SrtLines<'_, T> {
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
         match &mut *self.source {
             SrtSourceLines::Regular(lines) => next_regular(lines, &mut self.state),
+            SrtSourceLines::Ass(ass_lines) => todo!(),
             SrtSourceLines::Vtt(lines) => next_vtt(lines, &mut self.buf),
         }
     }
@@ -56,6 +57,10 @@ fn next_regular<'a, T: BufRead>(
     }
 
     Some(line)
+}
+
+fn next_ass<'a, T: BufRead>(lines: &'a AssLines<'_, T>) -> Option<SrtLine<'a>> {
+    todo!();
 }
 
 fn next_vtt<'a, T: BufRead>(

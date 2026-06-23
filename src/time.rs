@@ -57,7 +57,19 @@ impl Time {
         }
     }
 
-    pub(crate) fn to_srt(self) -> String {
+    /*
+    pub(crate) fn into_ass(self) -> String {
+        format!(
+            "{:01}:{:02}:{:02}:{:02}",
+            self.hours,
+            self.mins,
+            self.secs,
+            (self.millis / 10) % 100
+        )
+    }
+    */
+
+    pub(crate) fn into_srt(self) -> String {
         format!(
             "{:02}:{:02}:{:02},{:03}",
             self.hours,
@@ -67,7 +79,7 @@ impl Time {
         )
     }
 
-    pub(crate) fn to_vtt(self) -> String {
+    pub(crate) fn into_vtt(self) -> String {
         format!(
             "{:02}:{:02}:{:02}.{:03}",
             self.hours,

@@ -1,3 +1,4 @@
+pub mod ass;
 pub mod srt;
 pub mod vtt;
 
@@ -8,6 +9,7 @@ mod options;
 mod time;
 mod traits;
 
+pub use ass::{AssLine, AssLines};
 pub use byte_lines::ByteLines;
 pub use error::Error;
 pub use options::WriteOptions;

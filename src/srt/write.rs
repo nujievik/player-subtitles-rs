@@ -50,7 +50,7 @@ impl<'a, T: BufRead> WriteLines for SrtLines<'a, T> {
                             }
                             writer.write(format!("{}\n", number).as_bytes())?;
                             writer.write(
-                                format!("{} --> {}\n", start.to_srt(), end.to_srt()).as_bytes(),
+                                format!("{} --> {}\n", start.into_srt(), end.into_srt()).as_bytes(),
                             )?;
                             number += 1;
                             is_wrote_header = true;
