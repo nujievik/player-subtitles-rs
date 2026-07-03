@@ -1,4 +1,5 @@
 use crate::{Time, byte_helpers};
+use std::fmt;
 
 // Contains positions of Event fields.
 #[derive(Copy, Clone, Default)]
@@ -15,20 +16,20 @@ pub struct EventFormat {
 }
 
 pub struct Event<'a> {
-    ty: EventType<'a>,
+    pub(crate) ty: EventType<'a>,
     // Subtitles having different layer number will be ignored during the collusion detection.
     // Higher numbered layers will be drawn over the lower numbered.
-    layer: u8,
+    pub(crate) layer: u8,
     pub(crate) start: Time,
     pub(crate) end: Time,
-    style_name: &'a [u8],
+    pub(crate) style_name: &'a [u8],
     // Character name. This is the name of the character who speaks the dialogue. It is for
     // information only, to make the script is easier to follow when editing/timing.
-    character_name: &'a [u8],
-    margin_l: u16,
-    margin_r: u16,
-    margin_v: u16,
-    effect: Effect,
+    pub(crate) character_name: &'a [u8],
+    pub(crate) margin_l: u16,
+    pub(crate) margin_r: u16,
+    pub(crate) margin_v: u16,
+    pub(crate) effect: Effect,
     // Subtitle Text. This is the actual text which will be displayed as a subtitle onscreen.
     // Everything after the 9th comma is treated as the subtitle text, so it can include commas.
     // The text can include \n codes which is a line break, and can include Style Override control
@@ -104,6 +105,10 @@ impl EventFormat {
 
         if comma_count < 9 { None } else { Some(format) }
     }
+
+    pub(crate) fn as_bytes(&self) -> &[u8] {
+        b"Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
+    }
 }
 
 impl<'a> Event<'a> {
@@ -150,6 +155,31 @@ impl<'a> Event<'a> {
             effect: Effect::Empty,
             text: remainder,
         })
+    }
+}
+
+impl<'a> EventType<'a> {
+    pub(crate) fn as_bytes(&self) -> &[u8] {
+        match self {
+            Self::Dialogue => b"Dialogue",
+            Self::Comment => b"Comment",
+            Self::Picture => b"Picture",
+            Self::Sound => b"Sound",
+            Self::Movie => b"Movie",
+            Self::Command => b"Command",
+            Self::Unrecognized(bs) => bs,
+        }
+    }
+}
+
+impl fmt::Display for Effect {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Effect::Empty => return Ok(()),
+            Effect::Karaoke => "Karaoke",
+            _ => todo!(),
+        };
+        write!(f, "{s}")
     }
 }
 

@@ -57,7 +57,6 @@ impl Time {
         }
     }
 
-    /*
     pub(crate) fn into_ass(self) -> String {
         format!(
             "{:01}:{:02}:{:02}:{:02}",
@@ -67,7 +66,6 @@ impl Time {
             (self.millis / 10) % 100
         )
     }
-    */
 
     pub(crate) fn into_srt(self) -> String {
         format!(

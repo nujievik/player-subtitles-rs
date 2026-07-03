@@ -63,7 +63,6 @@ macro_rules! get_an_u_number {
 get_an_u_number!(get_u8, u8, u16);
 get_an_u_number!(get_u16, u16, u32);
 
-/*
 pub fn trim_prefix<'a, B>(data: &'a [u8], prefix: &B) -> &'a [u8]
 where
     B: AsRef<[u8]> + ?Sized,
@@ -79,4 +78,3 @@ where
         data
     }
 }
-*/
