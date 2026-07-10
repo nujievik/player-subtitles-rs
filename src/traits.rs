@@ -58,6 +58,20 @@ pub trait StreamingIterator {
         }
         None
     }
+
+    fn find_map<'a, B, F>(&'a mut self, mut f: F) -> Option<B>
+    where
+        F: FnMut(Self::Item<'a>) -> Option<B>,
+    {
+        let this = self as *mut Self;
+
+        while let Some(item) = unsafe { (&mut *this).next() } {
+            if let Some(result) = f(item) {
+                return Some(result);
+            }
+        }
+        None
+    }
 }
 
 pub trait WriteLines {

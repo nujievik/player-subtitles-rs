@@ -1,5 +1,5 @@
 use super::line::{Event, SectionMark};
-use super::{AssLine, AssLines, AssSourceLines};
+use super::{AssLine, AssLines};
 use crate::{Result, StreamingIterator, WriteLines, WriteOptions};
 use std::io::{BufRead, Write};
 
@@ -12,7 +12,6 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
             writer.write(crate::BOM)?;
         }
 
-        let is_regular_source = matches!(&*self.source, AssSourceLines::Regular(_));
         let is_setted_time = opts.start_from.is_some()
             || opts.end_on.is_some()
             || opts.add_time.is_some()

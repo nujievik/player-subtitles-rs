@@ -5,7 +5,7 @@ mod write;
 
 pub use line::AssLine;
 
-use crate::{ByteLines, NewLines, Result, SrtLines, VttLines};
+use crate::{ByteLines, NewLines, Result, SourceLines, SrtLines, VttLines};
 use it::{IterState, TransIterState};
 use std::{
     fs::File,
@@ -14,18 +14,17 @@ use std::{
 };
 
 pub struct AssLines<'a, T: BufRead> {
-    pub(crate) source: Box<AssSourceLines<'a, T>>,
+    pub(crate) source: SourceLines<'a, T>,
     buf: Vec<u8>,
     state: IterState,
     trans_state: TransIterState,
 }
 
-pub fn open_file<'a, P: AsRef<Path>>(path: P) -> Result<AssLines<'a, BufReader<File>>> {
-    AssLines::open_file(path)
+pub(crate) struct RegularAssLines<'a, T: BufRead> {
+    pub(crate) lines: ByteLines<'a, T>,
+    pub(crate) state: IterState,
 }
 
-pub(crate) enum AssSourceLines<'a, T: BufRead> {
-    Regular(ByteLines<'a, T>),
-    Srt(SrtLines<'a, T>),
-    Vtt(VttLines<'a, T>),
+pub fn open_file<'a, P: AsRef<Path>>(path: P) -> Result<AssLines<'a, BufReader<File>>> {
+    AssLines::open_file(path)
 }

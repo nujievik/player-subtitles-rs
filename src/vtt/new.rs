@@ -1,46 +1,42 @@
-use super::{BodyState, ByteLines, CurrentState, SrtLines, VttLines, VttSourceLines};
-use crate::{AssLines, NewLines, ass::AssSourceLines, srt::SrtSourceLines};
+use super::{BodyState, ByteLines, CurrentState, RegularVttLines, SrtLines, VttLines};
+use crate::{AssLines, NewLines, SourceLines};
 use std::io::BufRead;
 
 impl<'a, T: BufRead> NewLines<'a> for VttLines<'a, T> {}
+impl<'a, T: BufRead> NewLines<'a> for RegularVttLines<'a, T> {}
 
 impl<'a, T: BufRead> From<ByteLines<'a, T>> for VttLines<'a, T> {
     fn from(byte_lines: ByteLines<'a, T>) -> Self {
-        Self::new_with_source(VttSourceLines::Regular(byte_lines))
+        Self::new_with_source(SourceLines::Vtt(RegularVttLines::from(byte_lines)))
+    }
+}
+impl<'a, T: BufRead> From<ByteLines<'a, T>> for RegularVttLines<'a, T> {
+    fn from(lines: ByteLines<'a, T>) -> Self {
+        Self {
+            lines,
+            body_state: BodyState::Init,
+            current_state: CurrentState::Outside,
+        }
     }
 }
 
 impl<'a, T: BufRead> From<AssLines<'a, T>> for VttLines<'a, T> {
-    fn from(mut ass_lines: AssLines<'a, T>) -> Self {
-        match *ass_lines.source {
-            AssSourceLines::Regular(byte_lines) => {
-                ass_lines.source = Box::new(AssSourceLines::Regular(byte_lines));
-                Self::new_with_source(VttSourceLines::Ass(ass_lines))
-            }
-            AssSourceLines::Srt(srt_lines) => Self::new_with_source(VttSourceLines::Srt(srt_lines)),
-            AssSourceLines::Vtt(lines) => lines,
-        }
+    fn from(ass_lines: AssLines<'a, T>) -> Self {
+        Self::new_with_source(ass_lines.source)
     }
 }
 
 impl<'a, T: BufRead> From<SrtLines<'a, T>> for VttLines<'a, T> {
-    fn from(mut srt_lines: SrtLines<'a, T>) -> Self {
-        match *srt_lines.source {
-            SrtSourceLines::Regular(byte_lines) => {
-                srt_lines.source = Box::new(SrtSourceLines::Regular(byte_lines));
-                Self::new_with_source(VttSourceLines::Srt(srt_lines))
-            }
-            SrtSourceLines::Ass(ass_lines) => Self::new_with_source(VttSourceLines::Ass(ass_lines)),
-            SrtSourceLines::Vtt(lines) => lines,
-        }
+    fn from(srt_lines: SrtLines<'a, T>) -> Self {
+        Self::new_with_source(srt_lines.source)
     }
 }
 
 impl<'a, T: BufRead> VttLines<'a, T> {
     #[inline(always)]
-    fn new_with_source(src: VttSourceLines<'a, T>) -> Self {
+    fn new_with_source(source: SourceLines<'a, T>) -> Self {
         Self {
-            source: Box::new(src),
+            source,
             body_state: BodyState::Init,
             current_state: CurrentState::Outside,
         }

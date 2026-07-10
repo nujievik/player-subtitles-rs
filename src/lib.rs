@@ -20,4 +20,14 @@ pub use vtt::{VttLine, VttLines};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+use ass::RegularAssLines;
+use srt::RegularSrtLines;
+use vtt::RegularVttLines;
+
 const BOM: &[u8] = "\u{feff}".as_bytes();
+
+enum SourceLines<'a, T: std::io::BufRead> {
+    Ass(RegularAssLines<'a, T>),
+    Srt(RegularSrtLines<'a, T>),
+    Vtt(RegularVttLines<'a, T>),
+}

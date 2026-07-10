@@ -7,7 +7,7 @@ mod write;
 
 pub use line::VttLine;
 
-use crate::{AssLines, ByteLines, NewLines, Result, SrtLines};
+use crate::{AssLines, ByteLines, NewLines, Result, SourceLines, SrtLines};
 use it::{BodyState, CurrentState};
 use std::{
     fs::File,
@@ -16,23 +16,17 @@ use std::{
 };
 
 pub struct VttLines<'a, T: BufRead> {
-    pub(crate) source: Box<VttSourceLines<'a, T>>,
+    pub(crate) source: SourceLines<'a, T>,
     body_state: BodyState,
     current_state: CurrentState,
 }
 
-impl<'a, T: BufRead> VttLines<'a, T> {
-    pub fn into_srt(self) -> SrtLines<'a, T> {
-        SrtLines::from(self)
-    }
+pub(crate) struct RegularVttLines<'a, T: BufRead> {
+    pub(crate) lines: ByteLines<'a, T>,
+    pub(crate) body_state: BodyState,
+    pub(crate) current_state: CurrentState,
 }
 
 pub fn open_file<'a, P: AsRef<Path>>(path: P) -> Result<VttLines<'a, BufReader<File>>> {
     VttLines::open_file(path)
-}
-
-pub(crate) enum VttSourceLines<'a, T: BufRead> {
-    Regular(ByteLines<'a, T>),
-    Ass(AssLines<'a, T>),
-    Srt(SrtLines<'a, T>),
 }

@@ -1,8 +1,6 @@
-use super::{
-    VttLine, VttLines, VttSourceLines,
-    line::{Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark},
-};
-use crate::{AssLines, ByteLines, SrtLine, SrtLines, StreamingIterator, byte_helpers};
+use super::line::{Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark};
+use super::{RegularVttLines, VttLine, VttLines};
+use crate::{AssLines, ByteLines, SourceLines, SrtLine, SrtLines, StreamingIterator, byte_helpers};
 use std::io::BufRead;
 
 impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
@@ -12,13 +10,25 @@ impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
         Self: 'a;
 
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
-        match &mut *self.source {
-            VttSourceLines::Regular(xs) => {
-                next_regular(xs, &mut self.body_state, &mut self.current_state)
-            }
-            VttSourceLines::Ass(_) => todo!(),
-            VttSourceLines::Srt(xs) => next_srt(xs),
+        match &mut self.source {
+            SourceLines::Vtt(lines) => lines.next(),
+            _ => todo!(),
         }
+    }
+}
+
+impl<T: BufRead> StreamingIterator for RegularVttLines<'_, T> {
+    type Item<'a>
+        = VttLine<'a>
+    where
+        Self: 'a;
+
+    fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
+        next_regular(
+            &mut self.lines,
+            &mut self.body_state,
+            &mut self.current_state,
+        )
     }
 }
 

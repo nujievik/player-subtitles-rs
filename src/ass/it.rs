@@ -1,8 +1,8 @@
 use super::line::{
     Comment, Event, EventFormat, ScriptInfo, ScriptType, SectionMark, Title, WrapStyle,
 };
-use super::{AssLine, AssLines, AssSourceLines};
-use crate::{ByteLines, SrtLine, SrtLines, Time, StreamingIterator, byte_helpers};
+use super::{AssLine, AssLines, RegularAssLines};
+use crate::{ByteLines, SourceLines, SrtLine, SrtLines, StreamingIterator, Time, byte_helpers};
 use std::io::BufRead;
 
 impl<T: BufRead> StreamingIterator for AssLines<'_, T> {
@@ -12,11 +12,21 @@ impl<T: BufRead> StreamingIterator for AssLines<'_, T> {
         Self: 'a;
 
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
-        match &mut *self.source {
-            AssSourceLines::Regular(blines) => next_regular(blines, &mut self.state),
-            AssSourceLines::Srt(lines) => next_srt(lines, &mut self.buf, &mut self.trans_state),
-            AssSourceLines::Vtt(_) => todo!(),
+        match &mut self.source {
+            SourceLines::Ass(lines) => lines.next(),
+            _ => todo!(),
         }
+    }
+}
+
+impl<T: BufRead> StreamingIterator for RegularAssLines<'_, T> {
+    type Item<'a>
+        = AssLine<'a>
+    where
+        Self: 'a;
+
+    fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
+        next_regular(&mut self.lines, &mut self.state)
     }
 }
 

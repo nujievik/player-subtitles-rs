@@ -1,5 +1,5 @@
-use super::{VttLines, VttSourceLines, line::CueId};
-use crate::{Result, StreamingIterator, VttLine, WriteLines, WriteOptions};
+use super::{VttLines, line::CueId};
+use crate::{Result, SourceLines, StreamingIterator, VttLine, WriteLines, WriteOptions};
 use std::io::{BufRead, Write};
 
 impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
@@ -12,7 +12,7 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
         }
         writer.write(b"WEBVTT\n\n")?;
 
-        let is_srt_source = matches!(&*self.source, VttSourceLines::Srt(_));
+        let is_srt_source = matches!(&self.source, SourceLines::Srt(_));
         let is_setted_time = opts.start_from.is_some()
             || opts.end_on.is_some()
             || opts.add_time.is_some()

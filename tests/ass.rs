@@ -1,7 +1,7 @@
 mod common;
 
-use player_subtitles::*;
 use common::*;
+use player_subtitles::*;
 
 #[test]
 fn from_srt_lines() {
