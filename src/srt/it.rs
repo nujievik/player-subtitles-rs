@@ -14,9 +14,9 @@ impl<T: BufRead> StreamingIterator for SrtLines<'_, T> {
 
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
         match &mut self.source {
-            SourceLines::Ass(lines) => next_ass(lines, &mut self.buf, &mut self.trans_state),
+            SourceLines::Ass(lines) => next_from_ass(lines, &mut self.buf, &mut self.trans_state),
             SourceLines::Srt(lines) => lines.next(),
-            SourceLines::Vtt(lines) => next_vtt(lines, &mut self.buf, &mut self.trans_state),
+            SourceLines::Vtt(lines) => next_from_vtt(lines, &mut self.buf, &mut self.trans_state),
         }
     }
 }
@@ -65,7 +65,7 @@ pub enum TransIterState {
     Blank,
 }
 
-fn next_ass<'a, T: BufRead>(
+fn next_from_ass<'a, T: BufRead>(
     lines: &mut RegularAssLines<'_, T>,
     buf: &'a mut Vec<u8>,
     trans_state: &mut TransIterState,
@@ -87,7 +87,7 @@ fn next_ass<'a, T: BufRead>(
     Some(SrtLine::Number(BytesNumber { bytes: &[] }))
 }
 
-fn next_vtt<'a, T: BufRead>(
+fn next_from_vtt<'a, T: BufRead>(
     lines: &'a mut RegularVttLines<'_, T>,
     buf: &'a mut Vec<u8>,
     trans_state: &mut TransIterState,

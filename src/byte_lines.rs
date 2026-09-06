@@ -1,4 +1,4 @@
-mod streaming_iterator;
+mod it;
 
 use crate::Result;
 use std::{

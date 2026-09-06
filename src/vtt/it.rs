@@ -131,11 +131,11 @@ fn next_regular<'a, T: BufRead>(
     Some(VttLine::Unrecognized(bytes))
 }
 
-fn next_ass<'a, T: BufRead>(lines: &'a AssLines<'_, T>) -> Option<VttLine<'a>> {
+fn next_from_ass<'a, T: BufRead>(lines: &'a AssLines<'_, T>) -> Option<VttLine<'a>> {
     todo!();
 }
 
-fn next_srt<'a, T: BufRead>(srt_lines: &'a mut SrtLines<'_, T>) -> Option<VttLine<'a>> {
+fn next_from_srt<'a, T: BufRead>(srt_lines: &'a mut SrtLines<'_, T>) -> Option<VttLine<'a>> {
     let line = srt_lines
         .find(|l| matches!(l, SrtLine::Blank | SrtLine::TimeRange(_) | SrtLine::Text(_)))?;
     let line = match line {

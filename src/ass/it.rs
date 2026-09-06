@@ -137,7 +137,7 @@ fn next_regular<'a, T: BufRead>(
     Some(AssLine::Unrecognized(line))
 }
 
-fn next_srt<'a, T: BufRead>(
+fn next_from_srt<'a, T: BufRead>(
     srt_lines: &'a mut SrtLines<'_, T>,
     buf: &'a mut Vec<u8>,
     state: &mut TransIterState,
@@ -185,19 +185,19 @@ fn next_srt<'a, T: BufRead>(
             AssLine::EventFormat(EventFormat::new())
         }
         TransIterState::Events(TransIterStateEvents::AfterFormat) => {
-            return next_srt_event(srt_lines, buf, state, Event::new(), false);
+            return next_from_srt_event(srt_lines, buf, state, Event::new(), false);
         }
         TransIterState::Events(TransIterStateEvents::TimeRange(start, end)) => {
             let mut event = Event::new();
             event.start = *start;
             event.end = *end;
-            return next_srt_event(srt_lines, buf, state, event, true);
+            return next_from_srt_event(srt_lines, buf, state, event, true);
         }
     };
     Some(line)
 }
 
-fn next_srt_event<'a, T: BufRead>(
+fn next_from_srt_event<'a, T: BufRead>(
     srt_lines: &'a mut SrtLines<'_, T>,
     buf: &'a mut Vec<u8>,
     state: &mut TransIterState,
