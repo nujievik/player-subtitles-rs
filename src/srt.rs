@@ -1,6 +1,6 @@
 //! A SubRip subtitles module.
 
-mod it;
+pub(crate) mod it;
 pub mod line;
 mod new;
 mod write;

@@ -1,7 +1,7 @@
 use super::line::{Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark};
-use super::{RegularVttLines, VttLine, VttLines};
+use super::{RegularVttLines, TransIterState, VttLine, VttLines};
 use crate::{
-    AssLines, ByteLines, RegularSrtLines, SourceLines, SrtLine, SrtLines, StreamingIterator,
+    AssLine, ByteLines, RegularAssLines, RegularSrtLines, SourceLines, SrtLine, StreamingIterator,
     byte_helpers,
 };
 use std::io::BufRead;
@@ -14,9 +14,9 @@ impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
 
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
         match &mut self.source {
+            SourceLines::Ass(lines) => next_from_ass(lines, &mut self.buf, &mut self.trans_state),
             SourceLines::Srt(lines) => next_from_srt(lines),
             SourceLines::Vtt(lines) => lines.next(),
-            _ => todo!(),
         }
     }
 }
@@ -141,8 +141,82 @@ fn next_regular<'a, T: BufRead>(
     Some(VttLine::Unrecognized(bytes))
 }
 
-fn next_from_ass<'a, T: BufRead>(lines: &'a AssLines<'_, T>) -> Option<VttLine<'a>> {
-    todo!();
+fn next_from_ass<'a, T: BufRead>(
+    lines: &mut RegularAssLines<'_, T>,
+    buf: &'a mut Vec<u8>,
+    trans_state: &mut TransIterState,
+) -> Option<VttLine<'a>> {
+    let fake_buf = unsafe { &mut *(buf as *mut Vec<u8>) };
+
+    if let Some(line) = next_from_trans_state(fake_buf, trans_state) {
+        return Some(line);
+    }
+
+    let event = lines.find_map(|l| match l {
+        AssLine::Event(event) => Some(event),
+        _ => None,
+    })?;
+    *trans_state = TransIterState::TimeRange(event.start, event.end);
+    buf.clear();
+    buf.extend_from_slice(event.text);
+
+    Some(VttLine::CueId(CueId { bytes: &[] }))
+}
+
+fn next_from_trans_state<'a>(
+    buf: &'a mut Vec<u8>,
+    trans_state: &mut TransIterState,
+) -> Option<VttLine<'a>> {
+    match *trans_state {
+        TransIterState::Outside => None,
+        TransIterState::TimeRange(start, end) => {
+            *trans_state = TransIterState::Text(0);
+            Some(VttLine::TimeRangeAndStyle(TimeRangeAndStyle {
+                bytes: &[],
+                start,
+                end,
+            }))
+        }
+        TransIterState::Text(start) => {
+            if buf.is_empty() {
+                return Some(VttLine::Text(Text { bytes: &[] }));
+            }
+
+            let mut end = start;
+            let mut is_previous_sep = false;
+
+            while end < buf.len() {
+                match buf[end] {
+                    b'\\' => {
+                        is_previous_sep = true;
+                        continue;
+                    }
+                    b'N' | b'n' => {
+                        if is_previous_sep {
+                            end -= 2;
+                            break;
+                        }
+                    }
+                    _ => (),
+                }
+                is_previous_sep = false;
+            }
+
+            *trans_state = if end + 2 < buf.len() {
+                TransIterState::Text(end + 2)
+            } else {
+                TransIterState::Blank
+            };
+
+            Some(VttLine::Text(Text {
+                bytes: &buf[start..=end],
+            }))
+        }
+        TransIterState::Blank => {
+            *trans_state = TransIterState::Outside;
+            Some(VttLine::Blank)
+        }
+    }
 }
 
 fn next_from_srt<'a, T: BufRead>(srt_lines: &'a mut RegularSrtLines<'_, T>) -> Option<VttLine<'a>> {

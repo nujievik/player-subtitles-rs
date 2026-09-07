@@ -1,4 +1,6 @@
-use super::{BodyState, ByteLines, CurrentState, RegularVttLines, SrtLines, VttLines};
+use super::{
+    BodyState, ByteLines, CurrentState, RegularVttLines, SrtLines, TransIterState, VttLines,
+};
 use crate::{AssLines, NewLines, SourceLines};
 use std::io::BufRead;
 
@@ -37,8 +39,10 @@ impl<'a, T: BufRead> VttLines<'a, T> {
     fn new_with_source(source: SourceLines<'a, T>) -> Self {
         Self {
             source,
+            buf: Vec::new(),
             body_state: BodyState::Init,
             current_state: CurrentState::Outside,
+            trans_state: TransIterState::Outside,
         }
     }
 }
