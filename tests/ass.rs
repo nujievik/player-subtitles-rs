@@ -1,8 +1,41 @@
 mod common;
 
 use common::*;
-use player_subtitles::*;
+use player_subtitles::{ass::line::*, *};
 use std::fs;
+
+const SIMPLE: &[u8] = br"[Script Info]
+ScriptType: v4.00+
+WrapStyle: 0
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00:00,0:00:05:00,Default,,0,0,0,,It's simple subtitles
+";
+
+#[test]
+fn iter() {
+    let mut ass = AssLines::from_bytes(SIMPLE);
+    assert_eq!(
+        ass.next().unwrap(),
+        AssLine::SectionMark(SectionMark::ScriptInfo)
+    );
+    assert!(matches!(
+        ass.next().unwrap(),
+        AssLine::ScriptInfo(ScriptInfo::ScriptType(_))
+    ));
+    assert!(matches!(
+        ass.next().unwrap(),
+        AssLine::ScriptInfo(ScriptInfo::WrapStyle(_))
+    ));
+    assert!(matches!(ass.next().unwrap(), AssLine::Blank));
+    assert!(matches!(
+        ass.next().unwrap(),
+        AssLine::SectionMark(SectionMark::Events)
+    ));
+    assert!(matches!(ass.next().unwrap(), AssLine::EventFormat(_)));
+    assert!(matches!(ass.next().unwrap(), AssLine::Event(_)));
+}
 
 const EXPECTED: &[u8] = concat!(
     "[Script Info]\n",

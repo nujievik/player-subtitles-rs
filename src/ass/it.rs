@@ -34,6 +34,7 @@ impl<T: BufRead> StreamingIterator for RegularAssLines<'_, T> {
     }
 }
 
+#[derive(Debug)]
 pub enum IterState {
     Init,
     ScriptInfo,
@@ -45,17 +46,20 @@ pub enum IterState {
     Unrecognized,
 }
 
+#[derive(Debug)]
 pub enum TransIterState {
     Init,
     Header(TransIterStateHeader),
     Blank,
     Events(TransIterStateEvents),
 }
+#[derive(Debug)]
 pub enum TransIterStateHeader {
     GeneratedComment,
     ScriptType,
     WrapStyle,
 }
+#[derive(Debug)]
 pub enum TransIterStateEvents {
     Mark,
     Format,
@@ -93,13 +97,15 @@ fn next_regular<'a, T: BufRead>(
     }
 
     if line[0] == b'[' && *line.last().unwrap() == b']' {
-        return Some(if let Some(mark) = SectionMark::get_from_bytes(line) {
-            *state = IterState::SectionMark(mark);
-            AssLine::SectionMark(mark)
-        } else {
-            *state = IterState::Unrecognized;
-            AssLine::Unrecognized(line)
-        });
+        return Some(
+            if let Some(mark) = SectionMark::get_from_bytes(&line[1..line.len() - 1]) {
+                *state = IterState::SectionMark(mark);
+                AssLine::SectionMark(mark)
+            } else {
+                *state = IterState::Unrecognized;
+                AssLine::Unrecognized(line)
+            },
+        );
     }
 
     if let IterState::Unrecognized = state {

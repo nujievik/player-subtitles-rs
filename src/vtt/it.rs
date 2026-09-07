@@ -38,12 +38,14 @@ impl<T: BufRead> StreamingIterator for RegularVttLines<'_, T> {
     }
 }
 
+#[derive(Debug)]
 pub enum BodyState {
     Init,
     RegionsAndStyles,
     Cues,
 }
 
+#[derive(Debug)]
 pub enum CurrentState {
     Outside,
     InRegion,

@@ -26,6 +26,7 @@ use vtt::{RegularVttLines, line::VttLine};
 
 const BOM: &[u8] = "\u{feff}".as_bytes();
 
+#[derive(Debug)]
 enum SourceLines<'a, T: std::io::BufRead> {
     Ass(RegularAssLines<'a, T>),
     Srt(RegularSrtLines<'a, T>),

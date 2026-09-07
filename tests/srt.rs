@@ -5,6 +5,7 @@ mod write;
 use common::*;
 use player_subtitles::srt::line::SrtLine;
 use player_subtitles::*;
+use std::fs;
 
 macro_rules! test_iter_file {
     ($fn:ident, $file:expr, $lines:expr) => {

@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq)]
 pub enum ScriptInfo<'a> {
     Title(Title<'a>),
     OriginalScript,
@@ -52,14 +53,17 @@ impl<'a> ScriptInfo<'a> {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Title<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug, PartialEq)]
 pub struct ScriptType<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug, PartialEq)]
 pub struct WrapStyle<'a> {
     pub(crate) bytes: &'a [u8],
 }

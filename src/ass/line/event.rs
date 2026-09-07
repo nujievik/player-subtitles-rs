@@ -1,7 +1,7 @@
 use crate::{Time, byte_helpers};
 
 // Contains positions of Event fields.
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct EventFormat {
     layer: u8,
     start: u8,
@@ -14,6 +14,7 @@ pub struct EventFormat {
     effect: u8,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Event<'a> {
     pub(crate) ty: EventType<'a>,
     // Subtitles having different layer number will be ignored during the collusion detection.
@@ -36,6 +37,7 @@ pub struct Event<'a> {
     pub(crate) text: &'a [u8],
 }
 
+#[derive(Debug, PartialEq)]
 pub enum EventType<'a> {
     Dialogue,
     Comment,
@@ -46,6 +48,7 @@ pub enum EventType<'a> {
     Unrecognized(&'a [u8]),
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Effect {
     Empty,
     Karaoke,
@@ -79,7 +82,7 @@ impl EventFormat {
         let mut it = remainder
             .split(|b| matches!(b, b','))
             .map(|part| byte_helpers::trim_start(part));
-        let mut format = EventFormat::default();
+        let mut format = EventFormat::new();
 
         while let Some(x) = it.next() {
             let field = match x {
@@ -129,17 +132,19 @@ impl<'a> Event<'a> {
 
     pub(crate) fn get_new(line: &'a [u8], format: EventFormat) -> Option<Self> {
         let (ty, mut remainder) = get_event_type_and_trim_line(line)?;
+        dbg!("ty ok");
 
         let mut parts = [b"".as_slice(); 9];
         for i in 0..9 {
             let pos = remainder.iter().position(|&b| b == b',')?;
             parts[i] = &remainder[..pos];
-            remainder = if remainder.len() < pos + 1 {
+            remainder = if remainder.len() > pos + 1 {
                 byte_helpers::trim_start(&remainder[pos + 1..])
             } else {
                 return None;
             }
         }
+        parts[0] = byte_helpers::trim_start(parts[0]);
 
         Some(Self {
             ty,

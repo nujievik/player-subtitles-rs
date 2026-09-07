@@ -52,12 +52,14 @@ impl<T: BufRead> StreamingIterator for RegularSrtLines<'_, T> {
     }
 }
 
+#[derive(Debug)]
 pub enum IterState {
     Init,
     Outside,
     InBlock,
 }
 
+#[derive(Debug)]
 pub enum TransIterState {
     Outside,
     TimeRange(Time, Time),

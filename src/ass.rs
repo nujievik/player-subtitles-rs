@@ -13,12 +13,14 @@ use std::{
     path::Path,
 };
 
+#[derive(Debug)]
 pub struct AssLines<'a, T: BufRead> {
     pub(crate) source: SourceLines<'a, T>,
     buf: Vec<u8>,
     trans_state: TransIterState,
 }
 
+#[derive(Debug)]
 pub(crate) struct RegularAssLines<'a, T: BufRead> {
     pub(crate) lines: ByteLines<'a, T>,
     pub(crate) state: IterState,

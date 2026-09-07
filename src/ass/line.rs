@@ -10,6 +10,7 @@ pub use info::{ScriptInfo, ScriptType, Title, WrapStyle};
 pub use mark::SectionMark;
 pub use style::StyleLine;
 
+#[derive(Debug, PartialEq)]
 pub enum AssLine<'a> {
     Blank,
     SectionMark(SectionMark),

@@ -1,5 +1,6 @@
 use crate::byte_helpers;
 
+#[derive(Debug, PartialEq)]
 pub struct Comment<'a> {
     pub(crate) bytes: &'a [u8],
     pub(crate) text: &'a [u8],

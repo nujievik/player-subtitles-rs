@@ -20,6 +20,7 @@ pub struct VttLines<'a, T: BufRead> {
     trans_state: TransIterState,
 }
 
+#[derive(Debug)]
 pub(crate) struct RegularVttLines<'a, T: BufRead> {
     pub(crate) lines: ByteLines<'a, T>,
     pub(crate) body_state: BodyState,

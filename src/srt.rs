@@ -14,12 +14,14 @@ use std::{
     path::Path,
 };
 
+#[derive(Debug)]
 pub struct SrtLines<'a, T: BufRead> {
     pub(crate) source: SourceLines<'a, T>,
     pub(crate) buf: Vec<u8>,
     pub(crate) trans_state: TransIterState,
 }
 
+#[derive(Debug)]
 pub(crate) struct RegularSrtLines<'a, T: BufRead> {
     lines: ByteLines<'a, T>,
     state: IterState,
