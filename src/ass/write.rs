@@ -1,5 +1,5 @@
-use super::line::{Event, SectionMark};
-use super::{AssLine, AssLines};
+use super::AssLines;
+use super::line::{AssLine, Event};
 use crate::{Result, StreamingIterator, WriteLines, WriteOptions};
 use std::io::{BufRead, Write};
 

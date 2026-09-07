@@ -26,7 +26,7 @@ macro_rules! build_test_from_a_lines {
         #[test]
         fn $fn() {
             let dst = temp($dst);
-            let mut src = $lines::open_file(data($src)).unwrap();
+            let src = $lines::open_file(data($src)).unwrap();
             let mut ass = AssLines::from(src);
             ass.write(&dst).unwrap();
 

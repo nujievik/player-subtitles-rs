@@ -9,20 +9,20 @@ mod options;
 mod time;
 mod traits;
 
-pub use ass::{AssLine, AssLines};
+pub use ass::AssLines;
 pub use byte_lines::ByteLines;
 pub use error::Error;
 pub use options::WriteOptions;
-pub use srt::{SrtLine, SrtLines};
+pub use srt::SrtLines;
 pub use time::Time;
 pub use traits::{NewLines, StreamingIterator, WriteLines};
-pub use vtt::{VttLine, VttLines};
+pub use vtt::VttLines;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-use ass::RegularAssLines;
-use srt::{RegularSrtLines, it::TransIterState};
-use vtt::RegularVttLines;
+use ass::{RegularAssLines, line::AssLine};
+use srt::{RegularSrtLines, it::TransIterState, line::SrtLine};
+use vtt::{RegularVttLines, line::VttLine};
 
 const BOM: &[u8] = "\u{feff}".as_bytes();
 

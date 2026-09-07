@@ -1,10 +1,10 @@
 use super::line::{
-    Comment, Event, EventFormat, ScriptInfo, ScriptType, SectionMark, Title, WrapStyle,
+    AssLine, Comment, Event, EventFormat, ScriptInfo, ScriptType, SectionMark, WrapStyle,
 };
-use super::{AssLine, AssLines, RegularAssLines};
+use super::{AssLines, RegularAssLines};
 use crate::{
-    ByteLines, RegularSrtLines, RegularVttLines, SourceLines, SrtLine, SrtLines, StreamingIterator,
-    Time, VttLine, byte_helpers,
+    ByteLines, RegularSrtLines, RegularVttLines, SourceLines, SrtLine, StreamingIterator, Time,
+    VttLine, byte_helpers,
 };
 use std::io::BufRead;
 
@@ -51,12 +51,12 @@ pub enum TransIterState {
     Blank,
     Events(TransIterStateEvents),
 }
-enum TransIterStateHeader {
+pub enum TransIterStateHeader {
     GeneratedComment,
     ScriptType,
     WrapStyle,
 }
-enum TransIterStateEvents {
+pub enum TransIterStateEvents {
     Mark,
     Format,
     AfterFormat,

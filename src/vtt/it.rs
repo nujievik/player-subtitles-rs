@@ -1,5 +1,7 @@
-use super::line::{Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark};
-use super::{RegularVttLines, TransIterState, VttLine, VttLines};
+use super::line::{
+    Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark, VttLine,
+};
+use super::{RegularVttLines, TransIterState, VttLines};
 use crate::{
     AssLine, ByteLines, RegularAssLines, RegularSrtLines, SourceLines, SrtLine, StreamingIterator,
     byte_helpers,

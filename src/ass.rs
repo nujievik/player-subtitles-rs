@@ -1,11 +1,10 @@
-mod it;
 pub mod line;
+
+mod it;
 mod new;
 mod write;
 
-pub use line::AssLine;
-
-use crate::{ByteLines, NewLines, Result, SourceLines, SrtLines, VttLines};
+use crate::{ByteLines, NewLines, Result, SourceLines};
 use it::{IterState, TransIterState};
 use std::{
     fs::File,
@@ -16,7 +15,6 @@ use std::{
 pub struct AssLines<'a, T: BufRead> {
     pub(crate) source: SourceLines<'a, T>,
     buf: Vec<u8>,
-    state: IterState,
     trans_state: TransIterState,
 }
 

@@ -1,8 +1,8 @@
-use super::line::{BytesNumber, BytesText, BytesTimeRange};
-use super::{RegularSrtLines, SrtLine, SrtLines};
+use super::line::{Number, SrtLine, Text, TimeRange};
+use super::{RegularSrtLines, SrtLines};
 use crate::{
-    AssLine, ByteLines, RegularAssLines, RegularVttLines, SourceLines, StreamingIterator, Time,
-    VttLine, byte_helpers,
+    AssLine, RegularAssLines, RegularVttLines, SourceLines, StreamingIterator, Time, VttLine,
+    byte_helpers,
 };
 use std::io::BufRead;
 
@@ -44,7 +44,7 @@ impl<T: BufRead> StreamingIterator for RegularSrtLines<'_, T> {
 
         if let IterState::InBlock = self.state {
             if let SrtLine::Number(bs) = &mut line {
-                line = SrtLine::Text(BytesText { bytes: bs.bytes });
+                line = SrtLine::Text(Text { bytes: bs.bytes });
             }
         }
 
@@ -84,7 +84,7 @@ fn next_from_ass<'a, T: BufRead>(
     buf.clear();
     buf.extend_from_slice(event.text);
 
-    Some(SrtLine::Number(BytesNumber { bytes: &[] }))
+    Some(SrtLine::Number(Number { bytes: &[] }))
 }
 
 fn next_from_vtt<'a, T: BufRead>(
@@ -124,7 +124,7 @@ fn next_from_vtt<'a, T: BufRead>(
     match time_range {
         Some((start, end)) if !buf.is_empty() => {
             *trans_state = TransIterState::TimeRange(start, end);
-            Some(SrtLine::Number(BytesNumber { bytes: &[] }))
+            Some(SrtLine::Number(Number { bytes: &[] }))
         }
         _ => None,
     }
@@ -138,7 +138,7 @@ fn next_from_trans_state<'a>(
         TransIterState::Outside => None,
         TransIterState::TimeRange(start, end) => {
             *trans_state = TransIterState::Text(0);
-            Some(SrtLine::TimeRange(BytesTimeRange {
+            Some(SrtLine::TimeRange(TimeRange {
                 bytes: &[],
                 start,
                 end,
@@ -146,7 +146,7 @@ fn next_from_trans_state<'a>(
         }
         TransIterState::Text(start) => {
             if buf.is_empty() {
-                return Some(SrtLine::Text(BytesText { bytes: &[] }));
+                return Some(SrtLine::Text(Text { bytes: &[] }));
             }
 
             let mut end = start;
@@ -175,7 +175,7 @@ fn next_from_trans_state<'a>(
                 TransIterState::Blank
             };
 
-            Some(SrtLine::Text(BytesText {
+            Some(SrtLine::Text(Text {
                 bytes: &buf[start..=end],
             }))
         }

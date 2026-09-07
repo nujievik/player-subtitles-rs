@@ -1,4 +1,4 @@
-use super::line::{BytesNumber, BytesText};
+use super::line::{Number, Text};
 use crate::{Result, SrtLine, SrtLines, StreamingIterator, Time, WriteLines, WriteOptions};
 use std::io::{BufRead, Write};
 
@@ -42,7 +42,7 @@ impl<'a, T: BufRead> WriteLines for SrtLines<'a, T> {
 
                     time_range = Some((start, end));
                 }
-                SrtLine::Number(BytesNumber { bytes }) | SrtLine::Text(BytesText { bytes }) => {
+                SrtLine::Number(Number { bytes }) | SrtLine::Text(Text { bytes }) => {
                     if !is_wrote_header {
                         if let Some((start, end)) = time_range {
                             if number > 1 {

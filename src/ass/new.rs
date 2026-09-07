@@ -26,7 +26,7 @@ impl<'a, T: BufRead> From<SrtLines<'a, T>> for AssLines<'a, T> {
 }
 
 impl<'a, T: BufRead> From<VttLines<'a, T>> for AssLines<'a, T> {
-    fn from(mut vtt_lines: VttLines<'a, T>) -> AssLines<'a, T> {
+    fn from(vtt_lines: VttLines<'a, T>) -> AssLines<'a, T> {
         Self::new_with_source(vtt_lines.source)
     }
 }
@@ -37,7 +37,6 @@ impl<'a, T: BufRead> AssLines<'a, T> {
         Self {
             source,
             buf: Vec::new(),
-            state: IterState::Init,
             trans_state: TransIterState::Init,
         }
     }

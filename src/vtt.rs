@@ -1,13 +1,12 @@
 //! A WebVTT subtitles module.
 
+pub mod line;
+
 mod it;
-mod line;
 mod new;
 mod write;
 
-pub use line::VttLine;
-
-use crate::{AssLines, ByteLines, NewLines, Result, SourceLines, SrtLines, TransIterState};
+use crate::{ByteLines, NewLines, Result, SourceLines, SrtLines, TransIterState};
 use it::{BodyState, CurrentState};
 use std::{
     fs::File,
@@ -18,8 +17,6 @@ use std::{
 pub struct VttLines<'a, T: BufRead> {
     pub(crate) source: SourceLines<'a, T>,
     buf: Vec<u8>,
-    body_state: BodyState,
-    current_state: CurrentState,
     trans_state: TransIterState,
 }
 

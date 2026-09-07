@@ -1,13 +1,12 @@
 //! A SubRip subtitles module.
 
-pub(crate) mod it;
 pub mod line;
+
+pub(crate) mod it;
 mod new;
 mod write;
 
-pub use line::{BytesText, BytesTimeRange, SrtLine};
-
-use crate::{AssLines, ByteLines, NewLines, Result, SourceLines, VttLines};
+use crate::{ByteLines, NewLines, Result, SourceLines};
 use it::{IterState, TransIterState};
 use std::{
     fs::File,

@@ -40,8 +40,6 @@ impl<'a, T: BufRead> VttLines<'a, T> {
         Self {
             source,
             buf: Vec::new(),
-            body_state: BodyState::Init,
-            current_state: CurrentState::Outside,
             trans_state: TransIterState::Outside,
         }
     }

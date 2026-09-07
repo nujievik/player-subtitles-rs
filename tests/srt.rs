@@ -3,6 +3,7 @@ mod common;
 mod write;
 
 use common::*;
+use player_subtitles::srt::line::SrtLine;
 use player_subtitles::*;
 
 macro_rules! test_iter_file {

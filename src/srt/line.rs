@@ -3,25 +3,25 @@ use crate::{Time, byte_helpers};
 #[derive(Debug, PartialEq)]
 pub enum SrtLine<'a> {
     Blank,
-    Number(BytesNumber<'a>),
-    TimeRange(BytesTimeRange<'a>),
-    Text(BytesText<'a>),
+    Number(Number<'a>),
+    TimeRange(TimeRange<'a>),
+    Text(Text<'a>),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct BytesNumber<'a> {
+pub struct Number<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
 #[derive(Debug, PartialEq)]
-pub struct BytesTimeRange<'a> {
+pub struct TimeRange<'a> {
     pub(crate) bytes: &'a [u8],
     pub start: Time,
     pub end: Time,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct BytesText<'a> {
+pub struct Text<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
@@ -34,11 +34,11 @@ impl<'a> SrtLine<'a> {
         if bytes.is_empty() {
             SrtLine::Blank
         } else if bytes.iter().all(|b| b.is_ascii_digit()) {
-            SrtLine::Number(BytesNumber { bytes })
+            SrtLine::Number(Number { bytes })
         } else if let Some((start, end)) = get_time_range(bytes) {
-            SrtLine::TimeRange(BytesTimeRange { bytes, start, end })
+            SrtLine::TimeRange(TimeRange { bytes, start, end })
         } else {
-            SrtLine::Text(BytesText { bytes })
+            SrtLine::Text(Text { bytes })
         }
     }
 
@@ -111,11 +111,11 @@ macro_rules! impls_as_bytes {
         impl_deref!($t);
     };
 }
-impls_as_bytes!(BytesNumber);
-impls_as_bytes!(BytesTimeRange);
-impls_as_bytes!(BytesText);
+impls_as_bytes!(Number);
+impls_as_bytes!(TimeRange);
+impls_as_bytes!(Text);
 
-impl<'a> BytesTimeRange<'a> {
+impl<'a> TimeRange<'a> {
     /// Returns subtitle start time.
     #[inline]
     pub fn start(&self) -> Time {
@@ -174,7 +174,7 @@ mod tests {
     fn new_number() {
         ["0", "4", " 0 ", "4\n", "\t4\n"].iter().for_each(|s| {
             let bytes = byte_helpers::trim(s.as_bytes());
-            let exp = SrtLine::Number(BytesNumber { bytes });
+            let exp = SrtLine::Number(Number { bytes });
             assert_eq!(exp, SrtLine::new(s.as_bytes()));
         })
     }
@@ -196,7 +196,7 @@ mod tests {
         .into_iter()
         .for_each(|(s, start, end)| {
             let bytes = byte_helpers::trim(s.as_bytes());
-            let exp = SrtLine::TimeRange(BytesTimeRange { bytes, start, end });
+            let exp = SrtLine::TimeRange(TimeRange { bytes, start, end });
             assert_eq!(exp, SrtLine::new(s.as_bytes()));
         })
     }
@@ -207,7 +207,7 @@ mod tests {
             .iter()
             .for_each(|s| {
                 let bytes = byte_helpers::trim(s.as_bytes());
-                let exp = SrtLine::Text(BytesText { bytes });
+                let exp = SrtLine::Text(Text { bytes });
                 assert_eq!(exp, SrtLine::new(s.as_bytes()));
             })
     }
