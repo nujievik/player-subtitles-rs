@@ -1,5 +1,4 @@
 use crate::{Time, byte_helpers};
-use std::fmt;
 
 // Contains positions of Event fields.
 #[derive(Copy, Clone, Default)]
@@ -19,7 +18,7 @@ pub struct Event<'a> {
     pub(crate) ty: EventType<'a>,
     // Subtitles having different layer number will be ignored during the collusion detection.
     // Higher numbered layers will be drawn over the lower numbered.
-    pub(crate) layer: u8,
+    pub(crate) layer: u16,
     pub(crate) start: Time,
     pub(crate) end: Time,
     pub(crate) style_name: &'a [u8],
@@ -144,7 +143,7 @@ impl<'a> Event<'a> {
 
         Some(Self {
             ty,
-            layer: byte_helpers::get_u8(parts[format.layer as usize])?,
+            layer: byte_helpers::get_u16(parts[format.layer as usize])?,
             start: get_time(parts[format.start as usize])?,
             end: get_time(parts[format.end as usize])?,
             style_name: parts[format.style_name as usize],
@@ -172,14 +171,12 @@ impl<'a> EventType<'a> {
     }
 }
 
-impl fmt::Display for Effect {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = match self {
-            Effect::Empty => return Ok(()),
-            Effect::Karaoke => "Karaoke",
-            _ => todo!(),
-        };
-        write!(f, "{s}")
+impl Effect {
+    pub(crate) fn as_bytes(&self) -> &[u8] {
+        match self {
+            Effect::Karaoke => b"Karaoke",
+            _ => &[],
+        }
     }
 }
 

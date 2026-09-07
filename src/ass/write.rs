@@ -1,6 +1,10 @@
-use super::AssLines;
-use super::line::{AssLine, Event};
+use super::{
+    AssLines,
+    line::{AssLine, Event},
+    time::AssTime,
+};
 use crate::{Result, StreamingIterator, WriteLines, WriteOptions};
+use core::fmt::NumBuffer;
 use std::io::{BufRead, Write};
 
 impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
@@ -12,19 +16,15 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
             writer.write(crate::BOM)?;
         }
 
-        let is_setted_time = opts.start_from.is_some()
-            || opts.end_on.is_some()
-            || opts.add_time.is_some()
-            || opts.sub_time.is_some();
-        let mut is_wrote_blank = false;
-        let mut event_buf: Vec<u8> = Vec::new();
+        let mut is_written_blank = false;
+        let mut num_buf: NumBuffer<u16> = NumBuffer::new();
 
         while let Some(mut line) = self.next() {
             let bytes: &[u8] = match &mut line {
                 AssLine::Blank => {
-                    if !is_wrote_blank {
+                    if !is_written_blank {
                         writer.write(b"\n")?;
-                        is_wrote_blank = true;
+                        is_written_blank = true;
                     }
                     continue;
                 }
@@ -48,15 +48,15 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
                         event.end -= sub;
                     }
 
-                    event_buf.clear();
-                    event.write_into_buf(&mut event_buf)?;
-                    event_buf.as_slice()
+                    event.write_into_writer(writer, &mut num_buf)?;
+                    is_written_blank = false;
+                    continue;
                 }
                 AssLine::Unrecognized(bytes) => bytes,
             };
             writer.write(bytes)?;
             writer.write(b"\n")?;
-            is_wrote_blank = false;
+            is_written_blank = false;
         }
 
         Ok(())
@@ -64,31 +64,35 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
 }
 
 impl<'a> Event<'a> {
-    fn write_into_buf(&self, buf: &mut Vec<u8>) -> Result<()> {
-        buf.extend_from_slice(self.ty.as_bytes());
-        buf.extend_from_slice(b": ");
+    fn write_into_writer<W>(&self, writer: &mut W, num_buf: &mut NumBuffer<u16>) -> Result<()>
+    where
+        W: Write + ?Sized,
+    {
+        writer.write(self.ty.as_bytes())?;
+        writer.write(b": ")?;
 
-        buf.extend_from_slice(self.layer.to_string().as_bytes());
-        buf.push(b',');
-        buf.extend_from_slice(self.start.into_ass().as_bytes());
-        buf.push(b',');
-        buf.extend_from_slice(self.end.into_ass().as_bytes());
-        buf.push(b',');
-        buf.extend_from_slice(self.style_name);
-        buf.push(b',');
-        buf.extend_from_slice(self.character_name);
-        buf.push(b',');
+        writer.write(self.layer.format_into(num_buf).as_bytes())?;
+        writer.write(b",")?;
+        writer.write(AssTime::new(self.start).format_using(num_buf))?;
+        writer.write(b",")?;
+        writer.write(AssTime::new(self.end).format_using(num_buf))?;
+        writer.write(b",")?;
 
-        buf.extend_from_slice(self.margin_l.to_string().as_bytes());
-        buf.push(b',');
-        buf.extend_from_slice(self.margin_r.to_string().as_bytes());
-        buf.push(b',');
-        buf.extend_from_slice(self.margin_v.to_string().as_bytes());
-        buf.push(b',');
+        writer.write(self.style_name)?;
+        writer.write(b",")?;
+        writer.write(self.character_name)?;
+        writer.write(b",")?;
 
-        buf.extend_from_slice(self.effect.to_string().as_bytes());
-        buf.push(b',');
-        buf.extend_from_slice(self.text);
+        writer.write(self.margin_l.format_into(num_buf).as_bytes())?;
+        writer.write(b",")?;
+        writer.write(self.margin_r.format_into(num_buf).as_bytes())?;
+        writer.write(b",")?;
+        writer.write(self.margin_v.format_into(num_buf).as_bytes())?;
+        writer.write(b",")?;
+        writer.write(self.effect.as_bytes())?;
+        writer.write(b",")?;
+        writer.write(self.text)?;
+        writer.write(b"\n")?;
 
         Ok(())
     }
