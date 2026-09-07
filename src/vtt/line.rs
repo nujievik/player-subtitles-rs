@@ -1,5 +1,6 @@
 use crate::{Time, byte_helpers};
 
+#[derive(Debug)]
 pub enum VttLine<'a> {
     VttFileMark(VttFileMark<'a>),
     Blank,
@@ -15,37 +16,45 @@ pub enum VttLine<'a> {
     Unrecognized(&'a [u8]),
 }
 
+#[derive(Debug)]
 pub struct VttFileMark<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug)]
 pub struct Region<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug)]
 pub struct Style<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug)]
 pub struct Comment<'a> {
     pub(crate) bytes: &'a [u8],
     text: &'a [u8],
 }
 
+#[derive(Debug)]
 pub struct TimeRangeAndStyle<'a> {
     pub(crate) bytes: &'a [u8],
     pub start: Time,
     pub end: Time,
 }
 
+#[derive(Debug)]
 pub struct CueId<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug)]
 pub struct Metadata<'a> {
     pub(crate) bytes: &'a [u8],
 }
 
+#[derive(Debug)]
 pub struct Text<'a> {
     pub(crate) bytes: &'a [u8],
 }
