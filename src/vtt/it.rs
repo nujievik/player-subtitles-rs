@@ -99,7 +99,13 @@ fn next_regular<'a, T: BufRead>(
                     VttLine::StyleMark
                 } else {
                     *body_state = BodyState::Cues;
-                    VttLine::CueId(CueId { bytes })
+
+                    if let Some(ts) = TimeRangeAndStyle::get_new(bytes) {
+                        *current_state = CurrentState::InCue;
+                        VttLine::TimeRangeAndStyle(ts)
+                    } else {
+                        VttLine::CueId(CueId { bytes })
+                    }
                 }
             }
             CurrentState::InRegion => VttLine::Region(Region { bytes }),

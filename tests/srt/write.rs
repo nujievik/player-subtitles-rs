@@ -87,7 +87,7 @@ fn with_add_time() {
     for s in [
         "1",
         "00:01:00,000 --> 00:01:05,000",
-        "It's simple srt subtitles",
+        "It's simple subtitles",
     ] {
         assert_eq!(SrtLine::new(s), olines.next().unwrap());
     }

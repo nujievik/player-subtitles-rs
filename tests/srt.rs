@@ -26,7 +26,7 @@ test_iter_file!(
     [
         "1",
         "00:00:00,000 --> 00:00:05,000",
-        "It's simple srt subtitles"
+        "It's simple subtitles"
     ]
 );
 test_iter_file!(
@@ -35,7 +35,7 @@ test_iter_file!(
     [
         "1",
         "00:00:00,000 --> 00:00:05,000",
-        "It's simple srt subtitles"
+        "It's simple subtitles"
     ]
 );
 
