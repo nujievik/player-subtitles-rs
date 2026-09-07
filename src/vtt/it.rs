@@ -1,6 +1,9 @@
 use super::line::{Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark};
 use super::{RegularVttLines, VttLine, VttLines};
-use crate::{AssLines, ByteLines, SourceLines, SrtLine, SrtLines, StreamingIterator, byte_helpers};
+use crate::{
+    AssLines, ByteLines, RegularSrtLines, SourceLines, SrtLine, SrtLines, StreamingIterator,
+    byte_helpers,
+};
 use std::io::BufRead;
 
 impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
@@ -11,6 +14,7 @@ impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
 
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
         match &mut self.source {
+            SourceLines::Srt(lines) => next_from_srt(lines),
             SourceLines::Vtt(lines) => lines.next(),
             _ => todo!(),
         }
@@ -135,7 +139,7 @@ fn next_from_ass<'a, T: BufRead>(lines: &'a AssLines<'_, T>) -> Option<VttLine<'
     todo!();
 }
 
-fn next_from_srt<'a, T: BufRead>(srt_lines: &'a mut SrtLines<'_, T>) -> Option<VttLine<'a>> {
+fn next_from_srt<'a, T: BufRead>(srt_lines: &'a mut RegularSrtLines<'_, T>) -> Option<VttLine<'a>> {
     let line = srt_lines
         .find(|l| matches!(l, SrtLine::Blank | SrtLine::TimeRange(_) | SrtLine::Text(_)))?;
     let line = match line {

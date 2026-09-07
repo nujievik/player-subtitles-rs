@@ -2,7 +2,10 @@ use super::line::{
     Comment, Event, EventFormat, ScriptInfo, ScriptType, SectionMark, Title, WrapStyle,
 };
 use super::{AssLine, AssLines, RegularAssLines};
-use crate::{ByteLines, SourceLines, SrtLine, SrtLines, StreamingIterator, Time, byte_helpers};
+use crate::{
+    ByteLines, RegularSrtLines, SourceLines, SrtLine, SrtLines, StreamingIterator, Time,
+    byte_helpers,
+};
 use std::io::BufRead;
 
 impl<T: BufRead> StreamingIterator for AssLines<'_, T> {
@@ -14,6 +17,7 @@ impl<T: BufRead> StreamingIterator for AssLines<'_, T> {
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
         match &mut self.source {
             SourceLines::Ass(lines) => lines.next(),
+            SourceLines::Srt(lines) => next_from_srt(lines, &mut self.buf, &mut self.trans_state),
             _ => todo!(),
         }
     }
@@ -138,7 +142,7 @@ fn next_regular<'a, T: BufRead>(
 }
 
 fn next_from_srt<'a, T: BufRead>(
-    srt_lines: &'a mut SrtLines<'_, T>,
+    srt_lines: &'a mut RegularSrtLines<'_, T>,
     buf: &'a mut Vec<u8>,
     state: &mut TransIterState,
 ) -> Option<AssLine<'a>> {
@@ -198,7 +202,7 @@ fn next_from_srt<'a, T: BufRead>(
 }
 
 fn next_from_srt_event<'a, T: BufRead>(
-    srt_lines: &'a mut SrtLines<'_, T>,
+    srt_lines: &'a mut RegularSrtLines<'_, T>,
     buf: &'a mut Vec<u8>,
     state: &mut TransIterState,
     mut event: Event<'a>,
