@@ -2,13 +2,11 @@ mod comment;
 mod event;
 mod info;
 mod mark;
-mod style;
 
 pub use comment::Comment;
 pub use event::{Event, EventFormat};
 pub use info::{ScriptInfo, ScriptType, Title, WrapStyle};
 pub use mark::SectionMark;
-pub use style::StyleLine;
 
 #[derive(Debug, PartialEq)]
 pub enum AssLine<'a> {
@@ -16,7 +14,6 @@ pub enum AssLine<'a> {
     SectionMark(SectionMark),
     Comment(Comment<'a>),
     ScriptInfo(ScriptInfo<'a>),
-    Style(StyleLine),
     EventFormat(EventFormat),
     Event(Event<'a>),
     Unrecognized(&'a [u8]),

@@ -40,9 +40,7 @@ pub enum IterState {
     ScriptInfo,
     Blank,
     SectionMark(SectionMark),
-    Styles,
     Events(EventFormat),
-    Graphics,
     Unrecognized,
 }
 
@@ -114,24 +112,23 @@ fn next_regular<'a, T: BufRead>(
 
     if let IterState::ScriptInfo | IterState::SectionMark(SectionMark::ScriptInfo) = state {
         return Some(if let Some(info) = ScriptInfo::get_new(line) {
+            *state = IterState::ScriptInfo;
             AssLine::ScriptInfo(info)
         } else {
+            *state = IterState::ScriptInfo;
             AssLine::Unrecognized(line)
         });
     }
 
     if let IterState::SectionMark(mark) = state {
-        match mark {
-            SectionMark::Events => {
-                return Some(if let Some(format) = EventFormat::get_new(line) {
-                    *state = IterState::Events(format);
-                    AssLine::EventFormat(format)
-                } else {
-                    *state = IterState::Unrecognized;
-                    AssLine::Unrecognized(line)
-                });
-            }
-            _ => todo!(),
+        if let SectionMark::Events = mark {
+            return Some(if let Some(format) = EventFormat::get_new(line) {
+                *state = IterState::Events(format);
+                AssLine::EventFormat(format)
+            } else {
+                *state = IterState::Unrecognized;
+                AssLine::Unrecognized(line)
+            });
         }
     }
 
@@ -144,6 +141,7 @@ fn next_regular<'a, T: BufRead>(
         });
     }
 
+    *state = IterState::Unrecognized;
     Some(AssLine::Unrecognized(line))
 }
 

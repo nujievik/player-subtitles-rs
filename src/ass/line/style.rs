@@ -29,6 +29,6 @@ pub enum StyleLine {
 
 impl StyleLine {
     pub(crate) fn as_bytes(&self) -> &[u8] {
-        todo!()
+        &[]
     }
 }

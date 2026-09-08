@@ -1,19 +1,19 @@
 #[derive(Debug, PartialEq)]
 pub enum ScriptInfo<'a> {
     Title(Title<'a>),
-    OriginalScript,
-    OriginalTranslation,
-    OriginalEditing,
-    OriginalTiming,
-    SynchPoint,
-    ScriptUpdatedBy,
-    UpdateDetails,
+    OriginalScript(OriginalScript<'a>),
+    OriginalTranslation(OriginalTranslation<'a>),
+    OriginalEditing(OriginalEditing<'a>),
+    OriginalTiming(OriginalTiming<'a>),
+    SynchPoint(SynchPoint<'a>),
+    ScriptUpdatedBy(ScriptUpdatedBy<'a>),
+    UpdateDetails(UpdateDetails<'a>),
     ScriptType(ScriptType<'a>),
-    Collisions,
-    PlayResY,
-    PlayResX,
-    PlayDepth,
-    Timer,
+    Collisions(Collisions<'a>),
+    PlayResY(PlayResY<'a>),
+    PlayResX(PlayResX<'a>),
+    PlayDepth(PlayDepth<'a>),
+    Timer(Timer<'a>),
     WrapStyle(WrapStyle<'a>),
 }
 
@@ -24,46 +24,75 @@ impl<'a> ScriptInfo<'a> {
 
         let x = match left {
             b"Title" => ScriptInfo::Title(Title { bytes }),
-            b"Original Script" => ScriptInfo::OriginalScript,
-            b"Original Translation" => ScriptInfo::OriginalTranslation,
-            b"Original Editing" => ScriptInfo::OriginalEditing,
-            b"Original Timing" => ScriptInfo::OriginalTiming,
-            b"Synch Point" => ScriptInfo::SynchPoint,
-            b"Script Updated By" => ScriptInfo::ScriptUpdatedBy,
-            b"Update Details" => ScriptInfo::UpdateDetails,
+            b"Original Script" => ScriptInfo::OriginalScript(OriginalScript { bytes }),
+            b"Original Translation" => {
+                ScriptInfo::OriginalTranslation(OriginalTranslation { bytes })
+            }
+            b"Original Editing" => ScriptInfo::OriginalEditing(OriginalEditing { bytes }),
+            b"Original Timing" => ScriptInfo::OriginalTiming(OriginalTiming { bytes }),
+            b"Synch Point" => ScriptInfo::SynchPoint(SynchPoint { bytes }),
+            b"Script Updated By" => ScriptInfo::ScriptUpdatedBy(ScriptUpdatedBy { bytes }),
+            b"Update Details" => ScriptInfo::UpdateDetails(UpdateDetails { bytes }),
             b"ScriptType" => ScriptInfo::ScriptType(ScriptType { bytes }),
-            b"Collisions" => ScriptInfo::Collisions,
-            b"PlayResY" => ScriptInfo::PlayResY,
-            b"PlayResX" => ScriptInfo::PlayResX,
-            b"PlayDepth" => ScriptInfo::PlayDepth,
-            b"Timer" => ScriptInfo::Timer,
+            b"Collisions" => ScriptInfo::Collisions(Collisions { bytes }),
+            b"PlayResY" => ScriptInfo::PlayResY(PlayResY { bytes }),
+            b"PlayResX" => ScriptInfo::PlayResX(PlayResX { bytes }),
+            b"PlayDepth" => ScriptInfo::PlayDepth(PlayDepth { bytes }),
+            b"Timer" => ScriptInfo::Timer(Timer { bytes }),
             b"WrapStyle" => ScriptInfo::WrapStyle(WrapStyle { bytes }),
             _ => return None,
         };
         Some(x)
     }
 
-    pub(crate) fn as_bytes(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &[u8] {
         match self {
-            Self::Title(Title { bytes }) => bytes,
-            Self::ScriptType(ScriptType { bytes }) => bytes,
-            Self::WrapStyle(WrapStyle { bytes }) => bytes,
-            _ => todo!(),
+            Self::Title(x) => x.as_bytes(),
+            Self::OriginalScript(x) => x.as_bytes(),
+            Self::OriginalTranslation(x) => x.as_bytes(),
+            Self::OriginalEditing(x) => x.as_bytes(),
+            Self::OriginalTiming(x) => x.as_bytes(),
+            Self::SynchPoint(x) => x.as_bytes(),
+            Self::ScriptUpdatedBy(x) => x.as_bytes(),
+            Self::UpdateDetails(x) => x.as_bytes(),
+            Self::ScriptType(x) => x.as_bytes(),
+            Self::Collisions(x) => x.as_bytes(),
+            Self::PlayResY(x) => x.as_bytes(),
+            Self::PlayResX(x) => x.as_bytes(),
+            Self::PlayDepth(x) => x.as_bytes(),
+            Self::Timer(x) => x.as_bytes(),
+            Self::WrapStyle(x) => x.as_bytes(),
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Title<'a> {
-    pub(crate) bytes: &'a [u8],
+macro_rules! bytes_field_struct {
+    ($struct:ident) => {
+        #[derive(Debug, PartialEq)]
+        pub struct $struct<'a> {
+            pub(crate) bytes: &'a [u8],
+        }
+
+        impl<'a> $struct<'a> {
+            pub fn as_bytes(&self) -> &[u8] {
+                &self.bytes
+            }
+        }
+    };
 }
 
-#[derive(Debug, PartialEq)]
-pub struct ScriptType<'a> {
-    pub(crate) bytes: &'a [u8],
-}
-
-#[derive(Debug, PartialEq)]
-pub struct WrapStyle<'a> {
-    pub(crate) bytes: &'a [u8],
-}
+bytes_field_struct!(Title);
+bytes_field_struct!(OriginalScript);
+bytes_field_struct!(OriginalTranslation);
+bytes_field_struct!(OriginalEditing);
+bytes_field_struct!(OriginalTiming);
+bytes_field_struct!(SynchPoint);
+bytes_field_struct!(ScriptUpdatedBy);
+bytes_field_struct!(UpdateDetails);
+bytes_field_struct!(ScriptType);
+bytes_field_struct!(Collisions);
+bytes_field_struct!(PlayResY);
+bytes_field_struct!(PlayResX);
+bytes_field_struct!(PlayDepth);
+bytes_field_struct!(Timer);
+bytes_field_struct!(WrapStyle);

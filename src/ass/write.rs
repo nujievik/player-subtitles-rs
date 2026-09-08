@@ -29,7 +29,6 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
                 AssLine::SectionMark(mark) => mark.as_bytes(),
                 AssLine::Comment(comment) => comment.bytes,
                 AssLine::ScriptInfo(info) => info.as_bytes(),
-                AssLine::Style(style) => style.as_bytes(),
                 AssLine::EventFormat(format) => format.as_bytes(),
                 AssLine::Event(event) => {
                     if opts.start.is_some_and(|t| event.end <= t)
@@ -87,7 +86,7 @@ impl<'a> Event<'a> {
         writer.write(b",")?;
         writer.write(self.margin_v.format_into(&mut buf.num_buf).as_bytes())?;
         writer.write(b",")?;
-        writer.write(self.effect.as_bytes())?;
+        writer.write(self.effect)?;
         writer.write(b",")?;
         writer.write(self.text)?;
         writer.write(b"\n")?;

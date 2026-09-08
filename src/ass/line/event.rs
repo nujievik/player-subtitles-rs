@@ -29,7 +29,7 @@ pub struct Event<'a> {
     pub(crate) margin_l: u16,
     pub(crate) margin_r: u16,
     pub(crate) margin_v: u16,
-    pub(crate) effect: Effect,
+    pub(crate) effect: &'a [u8],
     // Subtitle Text. This is the actual text which will be displayed as a subtitle onscreen.
     // Everything after the 9th comma is treated as the subtitle text, so it can include commas.
     // The text can include \n codes which is a line break, and can include Style Override control
@@ -46,14 +46,6 @@ pub enum EventType<'a> {
     Movie,
     Command,
     Unrecognized(&'a [u8]),
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Effect {
-    Empty,
-    Karaoke,
-    ScrollUp,
-    Banner,
 }
 
 impl EventFormat {
@@ -125,7 +117,7 @@ impl<'a> Event<'a> {
             margin_l: 0,
             margin_r: 0,
             margin_v: 0,
-            effect: Effect::Empty,
+            effect: &[],
             text: &[],
         }
     }
@@ -155,7 +147,7 @@ impl<'a> Event<'a> {
             margin_l: byte_helpers::get_u16(parts[format.margin_l as usize])?,
             margin_r: byte_helpers::get_u16(parts[format.margin_r as usize])?,
             margin_v: byte_helpers::get_u16(parts[format.margin_v as usize])?,
-            effect: Effect::Empty,
+            effect: parts[format.effect as usize],
             text: remainder,
         })
     }
@@ -171,15 +163,6 @@ impl<'a> EventType<'a> {
             Self::Movie => b"Movie",
             Self::Command => b"Command",
             Self::Unrecognized(bs) => bs,
-        }
-    }
-}
-
-impl Effect {
-    pub(crate) fn as_bytes(&self) -> &[u8] {
-        match self {
-            Effect::Karaoke => b"Karaoke",
-            _ => &[],
         }
     }
 }
