@@ -132,7 +132,6 @@ impl<'a> Event<'a> {
 
     pub(crate) fn get_new(line: &'a [u8], format: EventFormat) -> Option<Self> {
         let (ty, mut remainder) = get_event_type_and_trim_line(line)?;
-        dbg!("ty ok");
 
         let mut parts = [b"".as_slice(); 9];
         for i in 0..9 {

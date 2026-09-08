@@ -5,7 +5,6 @@ mod write;
 use common::*;
 use player_subtitles::srt::line::SrtLine;
 use player_subtitles::*;
-use std::fs;
 
 macro_rules! test_iter_file {
     ($fn:ident, $file:expr, $lines:expr) => {
@@ -53,4 +52,14 @@ fn iter_cp1251_srt_file() {
     ]);
     assert_eq!(lines.next().unwrap(), l);
     assert!(lines.next().is_none());
+}
+
+#[test]
+fn iter_from_ass() {
+    let mut xs = SrtLines::from(AssLines::open_file(data("ass.ass")).unwrap());
+    assert!(matches!(xs.next().unwrap(), SrtLine::Number(_)));
+    assert!(matches!(xs.next().unwrap(), SrtLine::TimeRange(_)));
+    assert!(matches!(xs.next().unwrap(), SrtLine::Text(_)));
+    assert!(matches!(xs.next().unwrap(), SrtLine::Blank));
+    assert!(xs.next().is_none());
 }

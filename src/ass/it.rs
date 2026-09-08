@@ -317,7 +317,6 @@ fn next_from_vtt_event<'a, T: BufRead>(
     let mut updated_text = false;
 
     while let Some(line) = vtt_lines.next() {
-        dbg!(&line);
         match line {
             VttLine::Blank if updated_text => break,
             VttLine::Blank => {

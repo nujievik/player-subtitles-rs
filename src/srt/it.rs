@@ -162,13 +162,14 @@ fn next_from_trans_state<'a>(
                     }
                     b'N' | b'n' => {
                         if is_previous_sep {
-                            end -= 2;
+                            end -= 1;
                             break;
                         }
                     }
                     _ => (),
                 }
                 is_previous_sep = false;
+                end += 1;
             }
 
             *trans_state = if end + 2 < buf.len() {
@@ -178,7 +179,7 @@ fn next_from_trans_state<'a>(
             };
 
             Some(SrtLine::Text(Text {
-                bytes: &buf[start..=end],
+                bytes: &buf[start..end],
             }))
         }
         TransIterState::Blank => {
