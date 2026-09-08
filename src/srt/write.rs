@@ -1,5 +1,9 @@
 use super::line::{Number, Text};
-use crate::{Result, SrtLine, SrtLines, StreamingIterator, Time, WriteLines, WriteOptions};
+use crate::{
+    Result, SrtLine, SrtLines, StreamingIterator, Time, WriteLines, WriteOptions,
+    time::bufs::SrtTimeBuf,
+};
+use core::fmt::NumBuffer;
 use std::io::{BufRead, Write};
 
 impl<'a, T: BufRead> WriteLines for SrtLines<'a, T> {
@@ -14,6 +18,9 @@ impl<'a, T: BufRead> WriteLines for SrtLines<'a, T> {
         let mut number = 1usize;
         let mut is_written_header = false;
         let mut time_range: Option<(Time, Time)> = None;
+
+        let mut num_buf: NumBuffer<usize> = NumBuffer::new();
+        let mut time_buf = SrtTimeBuf::new();
 
         while let Some(line) = self.next() {
             match line {
@@ -47,12 +54,15 @@ impl<'a, T: BufRead> WriteLines for SrtLines<'a, T> {
                     if !is_written_header {
                         if let Some((start, end)) = time_range {
                             if number > 1 {
-                                writer.write("\n".as_bytes())?;
+                                writer.write(b"\n")?;
                             }
-                            writer.write(format!("{}\n", number).as_bytes())?;
-                            writer.write(
-                                format!("{} --> {}\n", start.into_srt(), end.into_srt()).as_bytes(),
-                            )?;
+                            writer.write(number.format_into(&mut num_buf).as_bytes())?;
+                            writer.write(b"\n")?;
+                            writer.write(time_buf.0.format_time(start))?;
+                            writer.write(b" --> ")?;
+                            writer.write(time_buf.0.format_time(end))?;
+                            writer.write(b"\n")?;
+
                             number += 1;
                             is_written_header = true;
                         } else {

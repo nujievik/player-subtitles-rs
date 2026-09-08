@@ -1,5 +1,8 @@
 use super::{VttLines, line::CueId};
-use crate::{Result, SourceLines, StreamingIterator, VttLine, WriteLines, WriteOptions};
+use crate::{
+    Result, SourceLines, StreamingIterator, VttLine, WriteLines, WriteOptions,
+    time::bufs::VttTimeBuf,
+};
 use std::io::{BufRead, Write};
 
 impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
@@ -17,23 +20,22 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
             || opts.end.is_some()
             || opts.add_time.is_some()
             || opts.sub_time.is_some();
-        let (mut cue_id_buf, mut time_buf): (Vec<u8>, Vec<u8>) = if is_setted_time {
-            (Vec::with_capacity(32), Vec::with_capacity(31))
-        } else {
-            (Vec::new(), Vec::new())
-        };
-        let mut is_wrote_blank = true;
-        let mut is_wrote_cue_time = false;
+
+        let capacity = if is_setted_time { 32 } else { 0 };
+        let mut cue_id_buf = Vec::with_capacity(capacity);
+        let mut is_written_blank = true;
+        let mut is_written_cue_time = false;
+        let mut buf = VttTimeBuf::new();
 
         while let Some(line) = self.next() {
             let bytes: &[u8] = match &line {
                 VttLine::VttFileMark(_) => continue,
                 VttLine::Blank => {
-                    if !is_wrote_blank {
+                    if !is_written_blank {
                         writer.write(b"\n")?;
                         cue_id_buf.clear();
-                        is_wrote_blank = true;
-                        is_wrote_cue_time = false;
+                        is_written_blank = true;
+                        is_written_cue_time = false;
                     }
                     continue;
                 }
@@ -66,18 +68,23 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
                         cue_id_buf.clear();
                     }
 
-                    time_buf.clear();
-                    write!(&mut time_buf, "{} --> {}", start.into_vtt(), end.into_vtt())?;
-                    is_wrote_cue_time = true;
-                    time_buf.as_slice()
+                    writer.write(buf.0.format_time(start))?;
+                    writer.write(b" --> ")?;
+                    writer.write(buf.0.format_time(end))?;
+                    writer.write(b"\n")?;
+
+                    is_written_blank = false;
+                    is_written_cue_time = true;
+                    continue;
                 }
-                VttLine::Text(_) if is_setted_time && !is_wrote_cue_time => continue,
-                VttLine::Metadata(_) if is_setted_time && !is_wrote_cue_time => continue,
+                VttLine::Text(_) if is_setted_time && !is_written_cue_time => continue,
+                VttLine::Metadata(_) if is_setted_time && !is_written_cue_time => continue,
                 line => line.as_bytes(),
             };
+
             writer.write(bytes)?;
             writer.write(b"\n")?;
-            is_wrote_blank = false;
+            is_written_blank = false;
         }
 
         Ok(())

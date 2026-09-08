@@ -2,7 +2,6 @@ pub mod line;
 
 mod it;
 mod new;
-mod time;
 mod write;
 
 use crate::{ByteLines, NewLines, Result, SourceLines};

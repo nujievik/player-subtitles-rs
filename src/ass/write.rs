@@ -1,10 +1,8 @@
 use super::{
     AssLines,
     line::{AssLine, Event},
-    time::AssTime,
 };
-use crate::{Result, StreamingIterator, WriteLines, WriteOptions};
-use core::fmt::NumBuffer;
+use crate::{Result, StreamingIterator, WriteLines, WriteOptions, time::bufs::AssTimeBuf};
 use std::io::{BufRead, Write};
 
 impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
@@ -17,7 +15,7 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
         }
 
         let mut is_written_blank = false;
-        let mut num_buf: NumBuffer<u16> = NumBuffer::new();
+        let mut time_buf = AssTimeBuf::new();
 
         while let Some(mut line) = self.next() {
             let bytes: &[u8] = match &mut line {
@@ -48,7 +46,7 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
                         event.end -= sub;
                     }
 
-                    event.write_into_writer(writer, &mut num_buf)?;
+                    event.write_into_writer(writer, &mut time_buf)?;
                     is_written_blank = false;
                     continue;
                 }
@@ -64,18 +62,18 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
 }
 
 impl<'a> Event<'a> {
-    fn write_into_writer<W>(&self, writer: &mut W, num_buf: &mut NumBuffer<u16>) -> Result<()>
+    fn write_into_writer<W>(&self, writer: &mut W, buf: &mut AssTimeBuf) -> Result<()>
     where
         W: Write + ?Sized,
     {
         writer.write(self.ty.as_bytes())?;
         writer.write(b": ")?;
 
-        writer.write(self.layer.format_into(num_buf).as_bytes())?;
+        writer.write(self.layer.format_into(&mut buf.num_buf).as_bytes())?;
         writer.write(b",")?;
-        writer.write(AssTime::new(self.start).format_using(num_buf))?;
+        writer.write(buf.format_time(self.start))?;
         writer.write(b",")?;
-        writer.write(AssTime::new(self.end).format_using(num_buf))?;
+        writer.write(buf.format_time(self.end))?;
         writer.write(b",")?;
 
         writer.write(self.style_name)?;
@@ -83,11 +81,11 @@ impl<'a> Event<'a> {
         writer.write(self.character_name)?;
         writer.write(b",")?;
 
-        writer.write(self.margin_l.format_into(num_buf).as_bytes())?;
+        writer.write(self.margin_l.format_into(&mut buf.num_buf).as_bytes())?;
         writer.write(b",")?;
-        writer.write(self.margin_r.format_into(num_buf).as_bytes())?;
+        writer.write(self.margin_r.format_into(&mut buf.num_buf).as_bytes())?;
         writer.write(b",")?;
-        writer.write(self.margin_v.format_into(num_buf).as_bytes())?;
+        writer.write(self.margin_v.format_into(&mut buf.num_buf).as_bytes())?;
         writer.write(b",")?;
         writer.write(self.effect.as_bytes())?;
         writer.write(b",")?;

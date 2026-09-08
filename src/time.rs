@@ -1,3 +1,5 @@
+pub(crate) mod bufs;
+
 use crate::{Error, Result};
 use std::{
     ops::{Add, AddAssign, Sub, SubAssign},
@@ -55,26 +57,6 @@ impl Time {
             secs,
             millis,
         }
-    }
-
-    pub(crate) fn into_srt(self) -> String {
-        format!(
-            "{:02}:{:02}:{:02},{:03}",
-            self.hours,
-            self.mins,
-            self.secs,
-            self.millis % 1000
-        )
-    }
-
-    pub(crate) fn into_vtt(self) -> String {
-        format!(
-            "{:02}:{:02}:{:02}.{:03}",
-            self.hours,
-            self.mins,
-            self.secs,
-            self.millis % 1000
-        )
     }
 }
 
