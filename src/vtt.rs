@@ -6,8 +6,8 @@ mod it;
 mod new;
 mod write;
 
-use crate::{ByteLines, NewLines, Result, SourceLines, SrtLines, TransIterState};
-use it::{BodyState, CurrentState};
+use crate::{ByteLines, NewLines, Result, SourceLines, SrtLines};
+use it::{BodyState, CurrentState, TransIterState};
 use std::{
     fs::File,
     io::{BufRead, BufReader},

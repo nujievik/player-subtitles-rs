@@ -1,10 +1,10 @@
 use super::line::{
     Comment, CueId, Metadata, Region, Style, Text, TimeRangeAndStyle, VttFileMark, VttLine,
 };
-use super::{RegularVttLines, TransIterState, VttLines};
+use super::{RegularVttLines, VttLines};
 use crate::{
     AssLine, ByteLines, RegularAssLines, RegularSrtLines, SourceLines, SrtLine, StreamingIterator,
-    byte_helpers,
+    Time, byte_helpers,
 };
 use std::io::BufRead;
 
@@ -17,7 +17,7 @@ impl<T: BufRead> StreamingIterator for VttLines<'_, T> {
     fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
         match &mut self.source {
             SourceLines::Ass(lines) => next_from_ass(lines, &mut self.buf, &mut self.trans_state),
-            SourceLines::Srt(lines) => next_from_srt(lines),
+            SourceLines::Srt(lines) => next_from_srt(lines, &mut self.buf, &mut self.trans_state),
             SourceLines::Vtt(lines) => lines.next(),
         }
     }
@@ -54,6 +54,15 @@ pub enum CurrentState {
     InCue,
     InMetadata,
     InText,
+}
+
+#[derive(Debug)]
+pub enum TransIterState {
+    Init,
+    Outside,
+    TimeRange(Time, Time),
+    Text(usize),
+    Blank,
 }
 
 fn next_regular<'a, T: BufRead>(
@@ -164,7 +173,28 @@ fn next_from_ass<'a, T: BufRead>(
     buf.clear();
     buf.extend_from_slice(event.text);
 
-    Some(VttLine::CueId(CueId { bytes: &[] }))
+    next_from_trans_state(buf, trans_state)
+}
+
+fn next_from_srt<'a, T: BufRead>(
+    srt_lines: &'a mut RegularSrtLines<'_, T>,
+    buf: &'a mut Vec<u8>,
+    trans_state: &mut TransIterState,
+) -> Option<VttLine<'a>> {
+    if let Some(line) = next_from_trans_state(buf, trans_state) {
+        return Some(line);
+    }
+
+    srt_lines.next().map(|line| match line {
+        SrtLine::Blank => VttLine::Blank,
+        SrtLine::Number(num) => VttLine::CueId(CueId { bytes: num.bytes }),
+        SrtLine::TimeRange(bs) => VttLine::TimeRangeAndStyle(TimeRangeAndStyle {
+            bytes: bs.bytes,
+            start: bs.start,
+            end: bs.end,
+        }),
+        SrtLine::Text(bs) => VttLine::Text(Text { bytes: bs.bytes }),
+    })
 }
 
 fn next_from_trans_state<'a>(
@@ -172,6 +202,10 @@ fn next_from_trans_state<'a>(
     trans_state: &mut TransIterState,
 ) -> Option<VttLine<'a>> {
     match *trans_state {
+        TransIterState::Init => {
+            *trans_state = TransIterState::Blank;
+            Some(VttLine::VttFileMark(VttFileMark { bytes: b"WEBVTT" }))
+        }
         TransIterState::Outside => None,
         TransIterState::TimeRange(start, end) => {
             *trans_state = TransIterState::Text(0);
@@ -197,13 +231,14 @@ fn next_from_trans_state<'a>(
                     }
                     b'N' | b'n' => {
                         if is_previous_sep {
-                            end -= 2;
+                            end -= 1;
                             break;
                         }
                     }
                     _ => (),
                 }
                 is_previous_sep = false;
+                end += 1;
             }
 
             *trans_state = if end + 2 < buf.len() {
@@ -213,7 +248,7 @@ fn next_from_trans_state<'a>(
             };
 
             Some(VttLine::Text(Text {
-                bytes: &buf[start..=end],
+                bytes: &buf[start..end],
             }))
         }
         TransIterState::Blank => {
@@ -221,20 +256,4 @@ fn next_from_trans_state<'a>(
             Some(VttLine::Blank)
         }
     }
-}
-
-fn next_from_srt<'a, T: BufRead>(srt_lines: &'a mut RegularSrtLines<'_, T>) -> Option<VttLine<'a>> {
-    let line = srt_lines
-        .find(|l| matches!(l, SrtLine::Blank | SrtLine::TimeRange(_) | SrtLine::Text(_)))?;
-    let line = match line {
-        SrtLine::Blank => VttLine::Blank,
-        SrtLine::TimeRange(bs) => VttLine::TimeRangeAndStyle(TimeRangeAndStyle {
-            bytes: bs.bytes,
-            start: bs.start,
-            end: bs.end,
-        }),
-        SrtLine::Text(bs) => VttLine::Text(Text { bytes: bs.bytes }),
-        _ => return None,
-    };
-    Some(line)
 }

@@ -29,8 +29,23 @@ fn write() {
 }
 
 #[test]
+fn from_ass_lines() {
+    let mut vtt = VttLines::from(AssLines::open_file(data("ass.ass")).unwrap());
+    assert!(matches!(vtt.next().unwrap(), VttLine::VttFileMark(_)));
+    assert!(matches!(vtt.next().unwrap(), VttLine::Blank));
+    assert!(matches!(vtt.next().unwrap(), VttLine::TimeRangeAndStyle(_)));
+    assert!(matches!(vtt.next().unwrap(), VttLine::Text(_)));
+    assert!(matches!(vtt.next().unwrap(), VttLine::Blank));
+    assert!(vtt.next().is_none());
+}
+
+#[test]
 fn from_srt_lines() {
-    let srt = SrtLines::open_file(data("srt.srt")).unwrap();
-    let mut vtt = VttLines::from(srt);
-    vtt.write(&temp("vtt_from_srt_lines.vtt")).unwrap();
+    let mut vtt = VttLines::from(SrtLines::open_file(data("srt.srt")).unwrap());
+    assert!(matches!(vtt.next().unwrap(), VttLine::VttFileMark(_)));
+    assert!(matches!(vtt.next().unwrap(), VttLine::Blank));
+    assert!(matches!(vtt.next().unwrap(), VttLine::CueId(_)));
+    assert!(matches!(vtt.next().unwrap(), VttLine::TimeRangeAndStyle(_)));
+    assert!(matches!(vtt.next().unwrap(), VttLine::Text(_)));
+    assert!(vtt.next().is_none());
 }

@@ -5,6 +5,20 @@ mod write;
 use common::*;
 use player_subtitles::{srt::line::SrtLine, *};
 
+const SIMPLE: &[u8] = br"1
+00:00:00,000 --> 00:00:05,000
+It's simple subtitles
+";
+
+#[test]
+fn iter() {
+    let mut srt = SrtLines::from_bytes(SIMPLE);
+    assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
+    assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
+    assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
+    assert!(srt.next().is_none());
+}
+
 macro_rules! test_iter_file {
     ($fn:ident, $file:expr, $lines:expr) => {
         #[test]

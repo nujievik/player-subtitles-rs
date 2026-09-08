@@ -21,7 +21,7 @@ pub use vtt::VttLines;
 pub type Result<T> = std::result::Result<T, Error>;
 
 use ass::{RegularAssLines, line::AssLine};
-use srt::{RegularSrtLines, it::TransIterState, line::SrtLine};
+use srt::{RegularSrtLines, line::SrtLine};
 use vtt::{RegularVttLines, line::VttLine};
 
 const BOM: &[u8] = "\u{feff}".as_bytes();
