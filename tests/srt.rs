@@ -3,8 +3,7 @@ mod common;
 mod write;
 
 use common::*;
-use player_subtitles::srt::line::SrtLine;
-use player_subtitles::*;
+use player_subtitles::{srt::line::SrtLine, *};
 
 macro_rules! test_iter_file {
     ($fn:ident, $file:expr, $lines:expr) => {
@@ -54,12 +53,19 @@ fn iter_cp1251_srt_file() {
     assert!(lines.next().is_none());
 }
 
-#[test]
-fn iter_from_ass() {
-    let mut xs = SrtLines::from(AssLines::open_file(data("ass.ass")).unwrap());
-    assert!(matches!(xs.next().unwrap(), SrtLine::Number(_)));
-    assert!(matches!(xs.next().unwrap(), SrtLine::TimeRange(_)));
-    assert!(matches!(xs.next().unwrap(), SrtLine::Text(_)));
-    assert!(matches!(xs.next().unwrap(), SrtLine::Blank));
-    assert!(xs.next().is_none());
+macro_rules! build_test_trans_iter_from_file {
+    ($fn:ident, $ty:ident, $src:expr) => {
+        #[test]
+        fn $fn() {
+            let mut srt = SrtLines::from($ty::open_file(data($src)).unwrap());
+            assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
+            assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
+            assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
+            assert!(matches!(srt.next().unwrap(), SrtLine::Blank));
+            assert!(srt.next().is_none());
+        }
+    };
 }
+
+build_test_trans_iter_from_file!(iter_from_ass, AssLines, "ass.ass");
+build_test_trans_iter_from_file!(iter_from_vtt, VttLines, "vtt.vtt");
