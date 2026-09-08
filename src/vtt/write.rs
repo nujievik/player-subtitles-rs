@@ -13,8 +13,8 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
         writer.write(b"WEBVTT\n\n")?;
 
         let is_srt_source = matches!(&self.source, SourceLines::Srt(_));
-        let is_setted_time = opts.start_from.is_some()
-            || opts.end_on.is_some()
+        let is_setted_time = opts.start.is_some()
+            || opts.end.is_some()
             || opts.add_time.is_some()
             || opts.sub_time.is_some();
         let (mut cue_id_buf, mut time_buf): (Vec<u8>, Vec<u8>) = if is_setted_time {
@@ -46,8 +46,7 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
                     let mut start = tr.start;
                     let mut end = tr.end;
 
-                    if opts.start_from.is_some_and(|t| end <= t)
-                        || opts.end_on.is_some_and(|t| start >= t)
+                    if opts.start.is_some_and(|t| end <= t) || opts.end.is_some_and(|t| start >= t)
                     {
                         cue_id_buf.clear();
                         continue;

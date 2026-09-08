@@ -121,13 +121,13 @@ fn with_sub_time() {
 }
 
 #[test]
-fn with_start_from() {
+fn with_start() {
     let ipath = data("two_blocks.srt");
     let opath = temp("srt_write_with_start_from.srt");
     let _ = fs::remove_file(&opath);
 
     let mut opts = WriteOptions::default();
-    opts.start_from = Some(Time::new_unchecked(0, 0, 15, 0));
+    opts.start = Some(Time::new_unchecked(0, 0, 15, 0));
     let mut ilines = SrtLines::open_file(&ipath).unwrap();
     ilines.write_with(&opath, &opts).unwrap();
 
@@ -139,13 +139,13 @@ fn with_start_from() {
 }
 
 #[test]
-fn with_end_on() {
+fn with_end() {
     let ipath = data("two_blocks.srt");
     let opath = temp("srt_write_with_end_on.srt");
     let _ = fs::remove_file(&opath);
 
     let mut opts = WriteOptions::default();
-    opts.end_on = Some(Time::new_unchecked(0, 0, 15, 0));
+    opts.end = Some(Time::new_unchecked(0, 0, 15, 0));
     let mut ilines = SrtLines::open_file(&ipath).unwrap();
     ilines.write_with(&opath, &opts).unwrap();
 

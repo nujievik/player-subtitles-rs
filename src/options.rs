@@ -6,10 +6,10 @@ use crate::Time;
 pub struct WriteOptions {
     /// Write the UTF-8 byte order mark (BOM).
     pub bom: bool,
-    /// Start write from a timestamp block.
-    pub start_from: Option<Time>,
-    /// End write on a timestamp block.
-    pub end_on: Option<Time>,
+    /// Write events that a timestamp > `start`. Write all if `start` is None.
+    pub start: Option<Time>,
+    /// Write events that a timestamp < `end`. Write all if `end` is None.
+    pub end: Option<Time>,
     /// Add a time to timestamps.
     pub add_time: Option<Time>,
     /// Sub a time from timestamps.
@@ -20,8 +20,8 @@ impl WriteOptions {
     pub const fn new() -> Self {
         Self {
             bom: false,
-            start_from: None,
-            end_on: None,
+            start: None,
+            end: None,
             add_time: None,
             sub_time: None,
         }

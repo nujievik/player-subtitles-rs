@@ -34,8 +34,8 @@ impl<'a, T: BufRead> WriteLines for AssLines<'a, T> {
                 AssLine::Style(style) => style.as_bytes(),
                 AssLine::EventFormat(format) => format.as_bytes(),
                 AssLine::Event(event) => {
-                    if opts.start_from.is_some_and(|t| event.end <= t)
-                        || opts.end_on.is_some_and(|t| event.start >= t)
+                    if opts.start.is_some_and(|t| event.end <= t)
+                        || opts.end.is_some_and(|t| event.start >= t)
                     {
                         continue;
                     }
