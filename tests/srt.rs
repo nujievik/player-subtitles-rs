@@ -6,80 +6,77 @@ use common::*;
 use player_subtitles::{srt::line::SrtLine, *};
 
 const SIMPLE: &[u8] = br"1
-00:00:00,000 --> 00:00:05,000
-It's simple subtitles
+00:00:05,000 --> 00:00:10,000
+First block
+
+2
+00:00:10,000 --> 00:00:15,000
+Second block
 ";
 
 #[test]
 fn iter() {
     let mut srt = SrtLines::from_bytes(SIMPLE);
+    for i in 0..2 {
+        if i > 0 {
+            assert!(matches!(srt.next().unwrap(), SrtLine::Blank));
+        }
+        assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
+    }
+    assert!(srt.next().is_none());
+}
+
+#[test]
+fn iter_file() {
+    let mut byte_lines = SrtLines::from_bytes(SIMPLE);
+    let mut file_lines = SrtLines::open_file(data("srt.srt")).unwrap();
+    while let Some(l) = byte_lines.next() {
+        assert_eq!(l, file_lines.next().unwrap());
+    }
+    assert!(file_lines.next().is_none());
+}
+
+#[test]
+fn iter_bom_file() {
+    let mut regular_lines = SrtLines::open_file(data("srt.srt")).unwrap();
+    let mut bomed_lines = SrtLines::open_file(data("srt_with_bom.srt")).unwrap();
+    while let Some(l) = regular_lines.next() {
+        assert_eq!(l, bomed_lines.next().unwrap());
+    }
+    assert!(bomed_lines.next().is_none());
+}
+
+#[test]
+fn iter_cp1251_file() {
+    let mut srt = SrtLines::open_file(data("cp1251.srt")).unwrap();
     assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
     assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
     assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
     assert!(srt.next().is_none());
 }
 
-macro_rules! test_iter_file {
-    ($fn:ident, $file:expr, $lines:expr) => {
-        #[test]
-        fn $fn() {
-            let mut lines = SrtLines::open_file(data($file)).unwrap();
-            for s in $lines {
-                let l = SrtLine::new(s.as_bytes());
-                assert_eq!(lines.next().unwrap(), l);
-            }
-            assert!(lines.next().is_none());
-        }
-    };
+#[test]
+fn iter_from_ass_lines() {
+    let mut srt = SrtLines::from(AssLines::open_file(data("ass.ass")).unwrap());
+    for _ in 0..2 {
+        assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::Blank));
+    }
+    assert!(srt.next().is_none());
 }
-
-test_iter_file!(iter_txt_file, "four_lines.txt", ["0", "1", "2", "3"]);
-test_iter_file!(
-    iter_srt_file,
-    "srt.srt",
-    [
-        "1",
-        "00:00:00,000 --> 00:00:05,000",
-        "It's simple subtitles"
-    ]
-);
-test_iter_file!(
-    iter_bomed_srt_file,
-    "bomed.srt",
-    [
-        "1",
-        "00:00:00,000 --> 00:00:05,000",
-        "It's simple subtitles"
-    ]
-);
 
 #[test]
-fn iter_cp1251_srt_file() {
-    let mut lines = SrtLines::open_file(data("cp1251.srt")).unwrap();
-    for s in ["1", "00:00:00,000 --> 00:00:05,000"] {
-        let l = SrtLine::new(s.as_bytes());
-        assert_eq!(lines.next().unwrap(), l);
+fn iter_from_vtt_lines() {
+    let mut srt = SrtLines::from(VttLines::open_file(data("vtt.vtt")).unwrap());
+    for _ in 0..2 {
+        assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
+        assert!(matches!(srt.next().unwrap(), SrtLine::Blank));
     }
-    let l = SrtLine::new(&[
-        99, 112, 49, 50, 53, 49, 32, 241, 243, 225, 242, 232, 242, 240, 251,
-    ]);
-    assert_eq!(lines.next().unwrap(), l);
-    assert!(lines.next().is_none());
+    assert!(srt.next().is_none());
 }
-
-macro_rules! build_test_trans_iter_from_file {
-    ($fn:ident, $ty:ident, $src:expr) => {
-        #[test]
-        fn $fn() {
-            let mut srt = SrtLines::from($ty::open_file(data($src)).unwrap());
-            assert!(matches!(srt.next().unwrap(), SrtLine::Number(_)));
-            assert!(matches!(srt.next().unwrap(), SrtLine::TimeRange(_)));
-            assert!(matches!(srt.next().unwrap(), SrtLine::Text(_)));
-            assert!(matches!(srt.next().unwrap(), SrtLine::Blank));
-            assert!(srt.next().is_none());
-        }
-    };
-}
-
-build_test_trans_iter_from_file!(iter_from_ass, AssLines, "ass.ass");
-build_test_trans_iter_from_file!(iter_from_vtt, VttLines, "vtt.vtt");

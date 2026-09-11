@@ -1,3 +1,18 @@
+macro_rules! bytes_field_struct {
+    ($struct:ident) => {
+        #[derive(Debug, PartialEq)]
+        pub struct $struct<'a> {
+            pub(crate) bytes: &'a [u8],
+        }
+
+        impl<'a> $struct<'a> {
+            pub fn as_bytes(&self) -> &[u8] {
+                &self.bytes
+            }
+        }
+    };
+}
+
 pub mod ass;
 pub mod srt;
 pub mod vtt;

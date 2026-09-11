@@ -15,7 +15,8 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
         }
         writer.write(b"WEBVTT\n\n")?;
 
-        let is_srt_source = matches!(&self.source, SourceLines::Srt(_));
+        let is_regular_source = matches!(&self.source, SourceLines::Vtt(_));
+
         let is_setted_time = opts.start.is_some()
             || opts.end.is_some()
             || opts.add_time.is_some()
@@ -44,7 +45,7 @@ impl<'a, T: BufRead> WriteLines for VttLines<'a, T> {
                     cue_id_buf.extend_from_slice(bytes);
                     continue;
                 }
-                VttLine::TimeRangeAndStyle(tr) if is_srt_source || is_setted_time => {
+                VttLine::TimeRangeAndStyle(tr) if !is_regular_source || is_setted_time => {
                     let mut start = tr.start;
                     let mut end = tr.end;
 

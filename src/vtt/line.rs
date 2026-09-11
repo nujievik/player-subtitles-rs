@@ -1,6 +1,6 @@
 use crate::{Time, byte_helpers};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum VttLine<'a> {
     VttFileMark(VttFileMark<'a>),
     Blank,
@@ -16,48 +16,25 @@ pub enum VttLine<'a> {
     Unrecognized(&'a [u8]),
 }
 
-#[derive(Debug)]
-pub struct VttFileMark<'a> {
-    pub(crate) bytes: &'a [u8],
-}
-
-#[derive(Debug)]
-pub struct Region<'a> {
-    pub(crate) bytes: &'a [u8],
-}
-
-#[derive(Debug)]
-pub struct Style<'a> {
-    pub(crate) bytes: &'a [u8],
-}
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Comment<'a> {
     pub(crate) bytes: &'a [u8],
     text: &'a [u8],
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct TimeRangeAndStyle<'a> {
     pub(crate) bytes: &'a [u8],
     pub start: Time,
     pub end: Time,
 }
 
-#[derive(Debug)]
-pub struct CueId<'a> {
-    pub(crate) bytes: &'a [u8],
-}
-
-#[derive(Debug)]
-pub struct Metadata<'a> {
-    pub(crate) bytes: &'a [u8],
-}
-
-#[derive(Debug)]
-pub struct Text<'a> {
-    pub(crate) bytes: &'a [u8],
-}
+bytes_field_struct!(VttFileMark);
+bytes_field_struct!(Region);
+bytes_field_struct!(Style);
+bytes_field_struct!(CueId);
+bytes_field_struct!(Metadata);
+bytes_field_struct!(Text);
 
 impl<'a> VttLine<'a> {
     pub(crate) fn as_bytes(&self) -> &[u8] {

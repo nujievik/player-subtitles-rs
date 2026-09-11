@@ -66,21 +66,6 @@ impl<'a> ScriptInfo<'a> {
     }
 }
 
-macro_rules! bytes_field_struct {
-    ($struct:ident) => {
-        #[derive(Debug, PartialEq)]
-        pub struct $struct<'a> {
-            pub(crate) bytes: &'a [u8],
-        }
-
-        impl<'a> $struct<'a> {
-            pub fn as_bytes(&self) -> &[u8] {
-                &self.bytes
-            }
-        }
-    };
-}
-
 bytes_field_struct!(Title);
 bytes_field_struct!(OriginalScript);
 bytes_field_struct!(OriginalTranslation);

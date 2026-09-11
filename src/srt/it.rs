@@ -113,9 +113,13 @@ fn next_from_vtt<'a, T: BufRead>(
                     buf.push(b'N');
                 }
 
+                let mut is_first = true;
                 for text in text.text() {
+                    if !is_first {
+                        buf.push(b' ');
+                    }
                     buf.extend_from_slice(text);
-                    buf.push(b' ');
+                    is_first = false;
                 }
             }
             _ if time_range.is_some() && !buf.is_empty() => break,
