@@ -16,8 +16,8 @@ pub struct Number<'a> {
 #[derive(Debug, PartialEq)]
 pub struct TimeRange<'a> {
     pub(crate) bytes: &'a [u8],
-    pub start: Time,
-    pub end: Time,
+    pub(crate) start: Time,
+    pub(crate) end: Time,
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,7 +26,7 @@ pub struct Text<'a> {
 }
 
 impl<'a> SrtLine<'a> {
-    pub fn new<B>(bytes: &'a B) -> Self
+    pub(crate) fn new<B>(bytes: &'a B) -> Self
     where
         B: AsRef<[u8]> + ?Sized,
     {

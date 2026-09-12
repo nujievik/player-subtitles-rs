@@ -7,6 +7,10 @@ pub struct Comment<'a> {
 }
 
 impl<'a> Comment<'a> {
+    pub fn as_bytes(&self) -> &[u8] {
+        self.bytes
+    }
+
     // requires non-empty line
     pub(crate) fn get_new(line: &'a [u8]) -> Option<Self> {
         let x = Self::new(line);

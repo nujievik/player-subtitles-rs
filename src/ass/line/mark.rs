@@ -9,6 +9,17 @@ pub enum SectionMark {
 }
 
 impl SectionMark {
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            Self::ScriptInfo => b"[Script Info]",
+            Self::V4Styles => b"[v4 Styles]",
+            Self::V4StylesPlus => b"[v4 Styles+]",
+            Self::Events => b"[Events]",
+            Self::Fonts => b"[Fonts]",
+            Self::Graphics => b"[Graphics]",
+        }
+    }
+
     pub(crate) fn get_from_bytes(bs: &[u8]) -> Option<Self> {
         let mark = match bs {
             b"v4 Styles" => SectionMark::V4Styles,
@@ -20,16 +31,5 @@ impl SectionMark {
             _ => return None,
         };
         Some(mark)
-    }
-
-    pub(crate) fn as_bytes(&self) -> &[u8] {
-        match self {
-            Self::ScriptInfo => b"[Script Info]",
-            Self::V4Styles => b"[v4 Styles]",
-            Self::V4StylesPlus => b"[v4 Styles+]",
-            Self::Events => b"[Events]",
-            Self::Fonts => b"[Fonts]",
-            Self::Graphics => b"[Graphics]",
-        }
     }
 }
