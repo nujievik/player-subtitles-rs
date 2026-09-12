@@ -1,5 +1,6 @@
 use super::line::{
-    AssLine, Comment, Event, EventFormat, ScriptInfo, ScriptType, SectionMark, WrapStyle,
+    AssLine, Comment, Event, EventFormat, EventFormatPositions, ScriptInfo, ScriptType,
+    SectionMark, WrapStyle,
 };
 use super::{AssLines, RegularAssLines};
 use crate::{
@@ -40,7 +41,7 @@ pub enum IterState {
     ScriptInfo,
     Blank,
     SectionMark(SectionMark),
-    Events(EventFormat),
+    Events(EventFormatPositions),
     Unrecognized,
 }
 
@@ -122,7 +123,7 @@ fn next_regular<'a, T: BufRead>(
     if let IterState::SectionMark(mark) = state {
         if let SectionMark::Events = mark {
             return Some(if let Some(format) = EventFormat::get_new(line) {
-                *state = IterState::Events(format);
+                *state = IterState::Events(*format.positions());
                 AssLine::EventFormat(format)
             } else {
                 *state = IterState::Unrecognized;
@@ -132,7 +133,7 @@ fn next_regular<'a, T: BufRead>(
     }
 
     if let IterState::Events(format) = state {
-        return Some(if let Some(event) = Event::get_new(line, *format) {
+        return Some(if let Some(event) = Event::get_new(line, format) {
             AssLine::Event(event)
         } else {
             *state = IterState::Unrecognized;
